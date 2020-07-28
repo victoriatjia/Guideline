@@ -1,0 +1,145 @@
+﻿<html>
+<head>
+	<style>
+		#svgPart {
+		  position: absolute;
+		  top: 0;
+		  left: 0;
+		  z-index: 2;
+		}
+		
+		#fhirObsID{
+			position: absolute;
+            top: 11px;
+            left: 35%;
+		}
+		#fhirID{
+			position: absolute;
+            top: 11px;
+            left: 20%;
+		}
+	</style>
+</head>
+
+<body >
+	<select id="srcImgOpt">
+	  <option value="http://203.64.84.218/dicomWebServer/Study1/JPGfiles/imagingStudy/MR2S1IM9.jpg">MR</option>
+	  <option value="http://203.64.84.218/dicomWebServer/Study2/JPGfiles/imagingStudy/mammo1.jpg">MG</option>
+	  <option value="http://203.64.84.218/dicomWebServer/StudyN/JPGfiles/imagingStudy/1200-1000.PNG">CT</option>
+	</select>
+	<button onClick="srcChange()">Enter</button><br><br>
+	<div style="position: relative;">
+		<img id="images"/>
+		<div id="svgPart"></div>
+	</div>
+	<div id="fhirID">Input FHIR Observation ID:    &nbsp;</div>
+	<input type="text" size="16" id="fhirObsID" onchange="getFHIR(this.value)"><br>
+
+    <script type="text/javascript">
+		var base64, svg;
+		
+		function getFHIR(val){
+			var FHIRObsSource= "http://hapi.fhir.org/baseR4/Observation/";//"https://hapi.fhir.tw/fhir/Observation/";	//MR= 8557 //8559: normal size(2560 & 3328), 8473= 1/4 size (640 & 832), 8561(rect normal size)	//CT= 8587
+			FHIRObsSource+= val;
+			getXML(FHIRObsSource);
+		}
+		
+		function getXML(txt){
+			var xhttp = new XMLHttpRequest();
+                xhttp.open("GET", txt, true);
+                xhttp.onreadystatechange = function (){
+                    if (this.readyState == 4){ 
+						showOutput(this.responseText);
+                    }
+                };
+                xhttp.send();
+		}
+		function showOutput(str){
+			var jsonOBJ =JSON.parse(str);
+			//alert(jsonOBJ);
+			if (jsonOBJ.total == 0){
+				alert('data unexist');
+			}
+			else{
+				//base64= jsonOBJ.valueString;
+				base64= jsonOBJ.component[0].valueString;
+				svg= atob(base64);
+				alert("Before calculation:\n" + svg);
+				var svgIndex=0;
+				var parser = new DOMParser();
+				var xmlDoc = parser.parseFromString(svg,"text/xml");
+				if(xmlDoc.getElementsByTagName("circle")[svgIndex]!=null){
+					var type= xmlDoc.getElementsByTagName("circle")[svgIndex];
+					var cx= type.getAttribute('cx');
+					var cy= type.getAttribute('cy');
+					var r= type.getAttribute('r')
+					
+					if(cx>1000){
+						cx/=4;	cy/=4;	r/=4;
+					}
+					
+					type.setAttribute('cx', cx);
+					type.setAttribute('cy', cy);
+					type.setAttribute('r', r);
+					svgIndex++;
+				}
+				else if(xmlDoc.getElementsByTagName("rect")[svgIndex]!=null){
+					var type= xmlDoc.getElementsByTagName("rect")[svgIndex];
+					var x= type.getAttribute('x');
+					type.setAttribute('x', x);
+					var y= type.getAttribute('y');
+					type.setAttribute('y', y);
+					var w= type.getAttribute('width');
+					type.setAttribute('width', w);
+					var h= type.getAttribute('height');
+					type.setAttribute('height', h);
+					alert(type.getAttribute('style').getAttribute('stroke'));
+					svgIndex++;
+				}
+				var xmlText = new XMLSerializer().serializeToString(xmlDoc);
+				alert("After calculation:\n" + xmlText);
+				document.getElementById("svgPart").innerHTML= String(xmlText);
+				//alert(svg);
+				
+			}
+		}
+		
+		function srcChange(){
+			var img= document.getElementById("images");
+			img.src=document.getElementById("srcImgOpt").value;
+			
+			img.onload= function() {
+				if(img.complete){
+					var h, w;
+					var imgs= document.querySelector("#images");
+					if(imgs.naturalWidth>1000){
+						w= imgs.naturalWidth/6;
+						h= imgs.naturalHeight/6;
+					}
+					else{
+						w= 512;//imgs.naturalWidth;
+						h= 512;//imgs.naturalHeight;
+					}
+					<!-- var type= sel.options[sel.selectedIndex].text; -->
+					<!-- if(type=='MG'){ -->
+						<!-- w= this.width/4; -->
+						<!-- h= this.height/4; -->
+					<!-- } -->
+					<!-- else if(type=='MG'){ -->
+						<!-- w= this.width; -->
+						<!-- h= this.height; -->
+					<!-- } -->
+					<!-- alert(w); -->
+					<!-- alert(h); -->
+					img.width= w;
+					img.height= h;					
+				}
+			}
+			
+			
+			
+		}
+		
+    </script>
+</body>
+</html>
