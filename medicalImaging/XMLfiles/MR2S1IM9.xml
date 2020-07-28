@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NativeDicomModel>
+<DicomAttribute  tag="00080008"  offset ="8" length ="16"  vr= "CS" keyword= "ImageType" ><Value number="1" >ORIGINAL\PRIMARY</Value></DicomAttribute>
+<DicomAttribute  tag="00080016"  offset ="32" length ="26"  vr= "UI" keyword= "SOPClassUID" ><Value number="1" >1.2.840.10008.5.1.4.1.1.4</Value></DicomAttribute>
+<DicomAttribute  tag="00080018"  offset ="66" length ="34"  vr= "UI" keyword= "SOPInstanceUID" ><Value number="1" >1.2.840.113674.950809132645138.100</Value></DicomAttribute>
+<DicomAttribute  tag="00080020"  offset ="108" length ="8"  vr= "DA" keyword= "StudyDate" ><Value number="1" >19950725</Value></DicomAttribute>
+<DicomAttribute  tag="00080021"  offset ="124" length ="8"  vr= "DA" keyword= "SeriesDate" ><Value number="1" >19950725</Value></DicomAttribute>
+<DicomAttribute  tag="00080023"  offset ="140" length ="8"  vr= "DA" keyword= "ContentDate" ><Value number="1" >19950725</Value></DicomAttribute>
+<DicomAttribute  tag="00080030"  offset ="156" length ="8"  vr= "TM" keyword= "StudyTime" ><Value number="1" >095237.0</Value></DicomAttribute>
+<DicomAttribute  tag="00080031"  offset ="172" length ="8"  vr= "TM" keyword= "SeriesTime" ><Value number="1" >095237.0</Value></DicomAttribute>
+<DicomAttribute  tag="00080033"  offset ="188" length ="8"  vr= "TM" keyword= "ContentTime" ><Value number="1" >095425.0</Value></DicomAttribute>
+<DicomAttribute  tag="00080050"  offset ="204" length ="6"  vr= "SH" keyword= "AccessionNumber" ><Value number="1" >GE0002</Value></DicomAttribute>
+<DicomAttribute  tag="00080060"  offset ="218" length ="2"  vr= "CS" keyword= "Modality" ><Value number="1" >MR</Value></DicomAttribute>
+<DicomAttribute  tag="00080070"  offset ="228" length ="14"  vr= "LO" keyword= "Manufacturer" ><Value number="1" >GENESIS_SIGNA </Value></DicomAttribute>
+<DicomAttribute  tag="00080080"  offset ="250" length ="6"  vr= "LO" keyword= "InstitutionName" ><Value number="1" >BAY02A</Value></DicomAttribute>
+<DicomAttribute  tag="00080090"  offset ="264" length ="0"  vr= "PN" keyword= "ReferringPhysicianName" ></DicomAttribute>
+<DicomAttribute  tag="00081010"  offset ="272" length ="14"  vr= "SH" keyword= "StationName" ><Value number="1" >GENESIS_SIGNA </Value></DicomAttribute>
+<DicomAttribute  tag="00081030"  offset ="294" length ="0"  vr= "LO" keyword= "StudyDescription" ></DicomAttribute>
+<DicomAttribute  tag="00100010"  offset ="302" length ="14"  vr= "PN" keyword= "PatientName" ><Value number="1" >BUXTON^STEVEN </Value></DicomAttribute>
+<DicomAttribute  tag="00100020"  offset ="324" length ="6"  vr= "LO" keyword= "PatientID" ><Value number="1" >GE1118</Value></DicomAttribute>
+<DicomAttribute  tag="00100030"  offset ="338" length ="0"  vr= "DA" keyword= "PatientBirthDate" ></DicomAttribute>
+<DicomAttribute  tag="00100040"  offset ="346" length ="2"  vr= "CS" keyword= "PatientSex" ><Value number="1" >M </Value></DicomAttribute>
+<DicomAttribute  tag="00101010"  offset ="356" length ="0"  vr= "AS" keyword= "PatientAge" ></DicomAttribute>
+<DicomAttribute  tag="00101030"  offset ="364" length ="2"  vr= "DS" keyword= "PatientWeight" ><Value number="1" >0 </Value></DicomAttribute>
+<DicomAttribute  tag="00180010"  offset ="374" length ="0"  vr= "LO" keyword= "ContrastBolusAgent" ></DicomAttribute>
+<DicomAttribute  tag="00180020"  offset ="382" length ="2"  vr= "CS" keyword= "ScanningSequence" ><Value number="1" >SE</Value></DicomAttribute>
+<DicomAttribute  tag="00180021"  offset ="392" length ="0"  vr= "CS" keyword= "SequenceVariant" ></DicomAttribute>
+<DicomAttribute  tag="00180022"  offset ="400" length ="0"  vr= "CS" keyword= "ScanOptions" ></DicomAttribute>
+<DicomAttribute  tag="00180023"  offset ="408" length ="0"  vr= "CS" keyword= "MRAcquisitionType" ></DicomAttribute>
+<DicomAttribute  tag="00180050"  offset ="416" length ="8"  vr= "DS" keyword= "SliceThickness" ><Value number="1" >5.000000</Value></DicomAttribute>
+<DicomAttribute  tag="00180080"  offset ="432" length ="12"  vr= "DS" keyword= "RepetitionTime" ><Value number="1" >4500.000000 </Value></DicomAttribute>
+<DicomAttribute  tag="00180081"  offset ="452" length ="10"  vr= "DS" keyword= "EchoTime" ><Value number="1" >76.000000 </Value></DicomAttribute>
+<DicomAttribute  tag="00180082"  offset ="470" length ="8"  vr= "DS" keyword= "InversionTime" ><Value number="1" >0.000000</Value></DicomAttribute>
+<DicomAttribute  tag="00180087"  offset ="486" length ="6"  vr= "DS" keyword= "MagneticFieldStrength" ><Value number="1" >10000 </Value></DicomAttribute>
+<DicomAttribute  tag="00180091"  offset ="500" length ="0"  vr= "IS" keyword= "EchoTrainLength" ></DicomAttribute>
+<DicomAttribute  tag="00181060"  offset ="508" length ="8"  vr= "DS" keyword= "TriggerTime" ><Value number="1" >0.000000</Value></DicomAttribute>
+<DicomAttribute  tag="00185100"  offset ="524" length ="4"  vr= "CS" keyword= "PatientPosition" ><Value number="1" >HFS </Value></DicomAttribute>
+<DicomAttribute  tag="0020000D"  offset ="536" length ="26"  vr= "UI" keyword= "StudyInstanceUID" ><Value number="1" >1.2.840.113674.1118.54.200</Value></DicomAttribute>
+<DicomAttribute  tag="0020000E"  offset ="570" length ="30"  vr= "UI" keyword= "SeriesInstanceUID" ><Value number="1" >1.2.840.113674.1118.54.179.300</Value></DicomAttribute>
+<DicomAttribute  tag="00200010"  offset ="608" length ="2"  vr= "SH" keyword= "StudyID" ><Value number="1" >6 </Value></DicomAttribute>
+<DicomAttribute  tag="00200011"  offset ="618" length ="4"  vr= "IS" keyword= "SeriesNumber" ><Value number="1" > 102</Value></DicomAttribute>
+<DicomAttribute  tag="00200012"  offset ="630" length ="2"  vr= "IS" keyword= "AcquisitionNumber" ><Value number="1" > 1</Value></DicomAttribute>
+<DicomAttribute  tag="00200013"  offset ="640" length ="2"  vr= "IS" keyword= "InstanceNumber" ><Value number="1" >9 </Value></DicomAttribute>
+<DicomAttribute  tag="00200020"  offset ="650" length ="4"  vr= "CS" keyword= "PatientOrientation" ><Value number="1" >P\F </Value><Value number="2" >P\F </Value></DicomAttribute>
+<DicomAttribute  tag="00200032"  offset ="662" length ="34"  vr= "DS" keyword= "ImagePositionPatient" ><Value number="1" >-30.000000\-125.000000\125.000000 </Value><Value number="2" >-30.000000\-125.000000\125.000000 </Value><Value number="3" >-30.000000\-125.000000\125.000000 </Value></DicomAttribute>
+<DicomAttribute  tag="00200037"  offset ="704" length ="54"  vr= "DS" keyword= "ImageOrientationPatient" ><Value number="1" >0.000000\1.000000\0.000000\0.000000\0.000000\-1.000000</Value><Value number="2" >0.000000\1.000000\0.000000\0.000000\0.000000\-1.000000</Value><Value number="3" >0.000000\1.000000\0.000000\0.000000\0.000000\-1.000000</Value><Value number="4" >0.000000\1.000000\0.000000\0.000000\0.000000\-1.000000</Value><Value number="5" >0.000000\1.000000\0.000000\0.000000\0.000000\-1.000000</Value><Value number="6" >0.000000\1.000000\0.000000\0.000000\0.000000\-1.000000</Value></DicomAttribute>
+<DicomAttribute  tag="00200052"  offset ="766" length ="50"  vr= "UI" keyword= "FrameOfReferenceUID" ><Value number="1" >1.2.840.113619.2.1.1.2702874736.601.806637114.447</Value></DicomAttribute>
+<DicomAttribute  tag="00200060"  offset ="824" length ="0"  vr= "CS" keyword= "Laterality" ></DicomAttribute>
+<DicomAttribute  tag="00201040"  offset ="832" length ="2"  vr= "LO" keyword= "PositionReferenceIndicator" ><Value number="1" >NA</Value></DicomAttribute>
+<DicomAttribute  tag="00201041"  offset ="842" length ="10"  vr= "DS" keyword= "SliceLocation" ><Value number="1" >30.000000 </Value></DicomAttribute>
+<DicomAttribute  tag="00204000"  offset ="860" length ="0"  vr= "LT" keyword= "ImageComments" ></DicomAttribute>
+<DicomAttribute  tag="00280002"  offset ="868" length ="2"  vr= "US" keyword= "SamplesPerPixel" ><Value number="1" >1</Value></DicomAttribute>
+<DicomAttribute  tag="00280004"  offset ="878" length ="12"  vr= "CS" keyword= "PhotometricInterpretation" ><Value number="1" >MONOCHROME2 </Value></DicomAttribute>
+<DicomAttribute  tag="00280010"  offset ="898" length ="2"  vr= "US" keyword= "Rows" ><Value number="1" >512</Value></DicomAttribute>
+<DicomAttribute  tag="00280011"  offset ="908" length ="2"  vr= "US" keyword= "Columns" ><Value number="1" >512</Value></DicomAttribute>
+<DicomAttribute  tag="00280030"  offset ="918" length ="18"  vr= "DS" keyword= "PixelSpacing" ><Value number="1" >0.488281\0.488281 </Value><Value number="2" >0.488281\0.488281 </Value></DicomAttribute>
+<DicomAttribute  tag="00280100"  offset ="944" length ="2"  vr= "US" keyword= "BitsAllocated" ><Value number="1" >16</Value></DicomAttribute>
+<DicomAttribute  tag="00280101"  offset ="954" length ="2"  vr= "US" keyword= "BitsStored" ><Value number="1" >16</Value></DicomAttribute>
+<DicomAttribute  tag="00280102"  offset ="964" length ="2"  vr= "US" keyword= "HighBit" ><Value number="1" >15</Value></DicomAttribute>
+<DicomAttribute  tag="00280103"  offset ="974" length ="2"  vr= "US" keyword= "PixelRepresentation" ><Value number="1" >0</Value></DicomAttribute>
+<DicomAttribute  tag="00281050"  offset ="984" length ="4"  vr= "DS" keyword= "WindowCenter" ><Value number="1" >542 </Value></DicomAttribute>
+<DicomAttribute  tag="00281051"  offset ="996" length ="4"  vr= "DS" keyword= "WindowWidth" ><Value number="1" >934 </Value></DicomAttribute>
+<DicomAttribute  tag="00281052"  offset ="1008" length ="2"  vr= "DS" keyword= "RescaleIntercept" ><Value number="1" >0 </Value></DicomAttribute>
+<DicomAttribute  tag="00281053"  offset ="1018" length ="2"  vr= "DS" keyword= "RescaleSlope" ><Value number="1" >1 </Value></DicomAttribute>
+<DicomAttribute  tag="7FE00010"  offset ="1028" length ="524288"  vr= "OW" keyword= "PixelData" ></DicomAttribute>
+</NativeDicomModel>
