@@ -138,7 +138,6 @@
 		  cursor: pointer;
 		}
     </style>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.4.0/fabric.min.js"></script>
 	</head>
 		
 	<body>
@@ -685,7 +684,6 @@
 					var fontType= svgText[i][4];
 					var font = parseInt(fontType.substr(0, 2))/(ratioWidth * (viewPort.iw/viewPort.vw));
 					fontType= font + fontType.substr(2);
-					document.getElementById("svgDisp").value= fontType;
 					drawText((svgText[i][0]-viewPort.sx)/ ratioWidth, (svgText[i][1]-viewPort.sy)/ ratioHeight, svgText[i][2], svgText[i][3], fontType); 
 				}
 				for (var i=0;i<line;i++){ 
