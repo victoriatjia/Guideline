@@ -294,7 +294,7 @@
 				for (var i = 0; i < 10; i++) {
 				  svgText[i] = new Array(6);
 				}
-			var svgColor="black", svgStrokeWidth=2;
+			var svgColor="black", svgStrokeWidth=2, svgFontType= "18px Arial";
 			//end annotation
 					
 			var readoffset;
@@ -305,7 +305,7 @@
 				xhttp.onreadystatechange = function () {
 					if (xhttp.readyState == 4) {
 						dicomData = new DataView(this.response);
-						viewPort = { vw: rVW, vh: rVH, sx: rSX, sy: rSY, sw: rSW, sh: rSH, iw:384, ih: 384}; //v = view(canvas), s= source imagesfixedsw=viewPort.sw;	//512
+						viewPort = { vw: rVW, vh: rVH, sx: rSX, sy: rSY, sw: rSW, sh: rSH, iw:448, ih: 448}; //v = view(canvas), s= source imagesfixedsw=viewPort.sw;	//512
 						fixedRatioW= viewPort.vw/ viewPort.iw, fixedRatioH= viewPort.vh/ viewPort.ih;
 					
 						setPixel();
@@ -360,7 +360,41 @@
 					var svgIndex=0;
 					var parser = new DOMParser();
 					var xmlDoc = parser.parseFromString(svg,"text/xml");
-					if(xmlDoc.getElementsByTagName("ellipse")[svgIndex]!=null){
+					if(xmlDoc.getElementsByTagName("text")[svgIndex]!=null){
+						var type= xmlDoc.getElementsByTagName("text")[svgIndex];
+						var x= type.getAttribute('x');
+						var y= type.getAttribute('y');
+						var val= type.childNodes[0].nodeValue;
+						var fontColor= type.getAttribute('fill');
+						var fontSize= type.getAttribute('font-size');
+						
+						svgText[text][0]= x;
+						svgText[text][1]= y;
+						svgText[text][2]= val;
+						svgText[text][3]= fontColor;
+						svgText[text][4]= fontSize + "px Arial";
+						text++;
+						svgIndex++;
+					}
+					else if(xmlDoc.getElementsByTagName("line")[svgIndex]!=null){
+						var type= xmlDoc.getElementsByTagName("line")[svgIndex];
+						var x1= type.getAttribute('x1');
+						var y1= type.getAttribute('y1');
+						var x2= type.getAttribute('x2');
+						var y2= type.getAttribute('y2');
+						var strokeColor= type.getAttribute('stroke');
+						var strokeWidth= parseInt(type.getAttribute('stroke-width'));
+						
+						svgLine[line][0]= x1;
+						svgLine[line][1]= y1;
+						svgLine[line][2]= x2;
+						svgLine[line][3]= y2;
+						svgLine[line][4]= strokeColor;
+						svgLine[line][5]= strokeWidth;
+						line++;
+						svgIndex++;
+					}
+					else if(xmlDoc.getElementsByTagName("ellipse")[svgIndex]!=null){
 						var type= xmlDoc.getElementsByTagName("ellipse")[svgIndex];
 						var cx= type.getAttribute('cx');
 						var cy= type.getAttribute('cy');
@@ -589,22 +623,33 @@
 			}
 			
 			function writeText(event){
-				if (event.which == 13 || event.keyCode == 13){
+				if (event.which == 13 || event.keyCode == 13){				//13 means "enter"
 					var val= document.getElementById("typeText").value;
-					ctx.font="18px Arial";
-					ctx.fillText(val,startX,startY);
+					var fontType= svgFontType;
+					adjustRatio(canvas);
+					var font = parseInt(fontType.substr(0, 2))/(ratioWidth * (viewPort.iw/viewPort.vw));
+					fontType= font + fontType.substr(2);
+					drawText(startX, startY, val, svgColor, fontType)
 					
-					svgText[text][0]= startX;			//((startX+3)*oldsw)+oldsx;	
-					svgText[text][1]= startY;		//((startY+10)*oldsh)+oldsy;
-					svgText[text][2]=val;	
-					svgText[text][3]=svgColor;
-					svgText[text][4]="18px Arial";
+					adjustRatio(canvas);
+					svgText[text][0]= (startX * ratioWidth) + viewPort.sx;
+					svgText[text][1]= (startY * ratioHeight) + viewPort.sy;
+					svgText[text][2]= val;	
+					svgText[text][3]= svgColor;
+					svgText[text][4]= svgFontType;
 					text++;
 					typeText = false;	
 					document.getElementById("typeText").style.visibility = "hidden";
 				}
 			}
-
+			
+			function drawText(startX, startY, val, color, fontstyle){
+				ctx.beginPath();
+				ctx.font= fontstyle;
+				ctx.fillStyle= color;
+				ctx.fillText(val,startX,startY);
+			}
+			
 			function Line() {
 				drawCanvas.onmousedown = function (e) {
 					paintline = true;
@@ -616,20 +661,14 @@
 					drawCtx.clearRect(0, 0, 400, 400);
 					var x2 = e.pageX - document.getElementById("allcanvas").offsetLeft, y2 = e.pageY - document.getElementById("allcanvas").offsetTop;
 					if (paintline) {
-						drawCtx.beginPath();
-						drawCtx.moveTo(startX, startY);
-						drawCtx.lineTo(x2, y2);
-						drawCtx.lineWidth=svgStrokeWidth;
-						drawCtx.stroke();
-
+						drawLine(drawCtx, startX, startY, x2, y2, svgColor, svgStrokeWidth);
+						
 						drawCtx.fillStyle = "red";
 						drawCtx.font = 1;
 						powX = Math.pow((x2 - startX), 2);
 						powY = Math.pow((y2 - startY), 2);
-
 						var length = Math.sqrt((powX + powY), 2);
 						length = (length).toFixed(2);
-						
 						//drawCtx.fillText(length + 'mm', (x2 + startX) / 2, (y2 + startY) / 2);
 					}
 				}
@@ -637,22 +676,31 @@
 				drawCanvas.onmouseup = function (e) {
 					paintline = false;
 					var x2 = e.pageX - document.getElementById("allcanvas").offsetLeft, y2 = e.pageY - document.getElementById("allcanvas").offsetTop;
+					drawLine(ctx, startX, startY, x2, y2, svgColor, svgStrokeWidth);
 					
-					svgLine[line][0]= startX;		//(startX*oldsw)+oldsx;
-					svgLine[line][1]= startY;		//(startY*oldsh)+oldsy;
-					svgLine[line][2]= x2;			//(x2*oldsw)+oldsx;	// normal: (400*1.28) + 0= 512;
-					svgLine[line][3]= y2;			//(y2*oldsh)+oldsy;
-					powX = Math.pow((x2 - startX), 2);
-					powY = Math.pow((y2 - startY), 2);
-					var length = Math.sqrt((powX + powY), 2);
+					adjustRatio(canvas);
+					svgLine[line][0]= (startX * ratioWidth) + viewPort.sx;
+					svgLine[line][1]= (startY * ratioHeight) + viewPort.sy;	
+					svgLine[line][2]= (x2 * ratioWidth) + viewPort.sx;	
+					svgLine[line][3]= (y2 * ratioHeight) + viewPort.sy;	
 					svgLine[line][4]= svgColor;
-					svgLine[line][5]= svgStrokeWidth;	//(length).toFixed(2);
-					//document.getElementById("tt").value= txt;
-					lineAgain(startX, startY, x2, y2, svgColor, svgStrokeWidth);
+					svgLine[line][5]= svgStrokeWidth;	
 					line++;
 				}
 			}
-		
+			
+			function drawLine(ctxType, startX, startY, x2, y2, color, strokewidth){
+				ctxType.beginPath();
+				ctxType.strokeStyle= color;
+				ctxType.lineWidth = strokewidth;
+				ctxType.moveTo(startX, startY);
+				ctxType.lineTo(x2, y2);
+				ctxType.stroke();
+				//ctx.fillStyle = "red";
+				//ctx.font = 3;
+				//ctx.fillText(len + 'mm', (x2 + startX) / 2, (y2 + startY) / 2);
+			}
+			
 			function Rect(){
 				drawCanvas.onmousedown = function (e) {
 					paintrect = true;
@@ -660,31 +708,36 @@
 					startY = e.pageY - document.getElementById("allcanvas").offsetTop;
 				}
 				drawCanvas.onmousemove = function (e) {
-					
 					drawCtx.clearRect(0, 0, 512, 512);
 					var x2 = e.pageX - document.getElementById("allcanvas").offsetLeft, y2 = e.pageY - document.getElementById("allcanvas").offsetTop;
-					var width=x2-startX, height=y2-startY;
 					 
-					if (paintrect) {
-						drawCtx.beginPath();
-						drawCtx.rect(startX, startY, width, height);
-						drawCtx.lineWidth=svgStrokeWidth;
-						drawCtx.stroke();
-					}
+					if (paintrect) 
+						drawRect(drawCtx, startX, startY, x2, y2, svgColor, svgStrokeWidth);
 				}
 				drawCanvas.onmouseup = function (e) {
 					paintrect = false;
 					var x2 = e.pageX - document.getElementById("allcanvas").offsetLeft, y2 = e.pageY - document.getElementById("allcanvas").offsetTop;
-					rectAgain(startX, startY, x2, y2, svgColor, svgStrokeWidth);
+					drawRect(ctx, startX, startY, x2, y2, svgColor, svgStrokeWidth);
 					
-					svgRect[rect][0]= startX;		//(startX*oldsw)+oldsx;
-					svgRect[rect][1]= startY;		//(startY*oldsh)+oldsy;
-					svgRect[rect][2]= x2;			//(x2*oldsw)+oldsx;
-					svgRect[rect][3]= y2;			//(y2*oldsh)+oldsy;
+					adjustRatio(canvas);
+					svgRect[rect][0]= (startX * ratioWidth) + viewPort.sx;
+					svgRect[rect][1]= (startY * ratioHeight) + viewPort.sy;	
+					svgRect[rect][2]= (x2 * ratioWidth) + viewPort.sx;	
+					svgRect[rect][3]= (y2 * ratioHeight) + viewPort.sy;	
 					svgRect[rect][4]= svgColor;
 					svgRect[rect][5]= svgStrokeWidth;
 					rect++;
 				}
+			}
+			
+			function drawRect(ctxType, startX, startY, x2, y2, color, strokewidth){
+				var width=x2-startX, height=y2-startY;
+				//document.getElementById("svgDisp").value+= startX + ", " + x2 + ", " +　startY + ", " + y2 + "\n";
+				ctxType.beginPath();
+				ctxType.strokeStyle= color;
+				ctxType.lineWidth = strokewidth;
+				ctxType.rect(startX, startY, width, height);
+				ctxType.stroke();
 			}
 			
 			var rx, ry;
@@ -702,7 +755,7 @@
 					ry = Math.abs(y2-startY);
 					
 					if (paintEllipse)
-						ellipseAgain(drawCtx, startX, startY, rx, ry, svgColor, svgStrokeWidth);
+						drawEllipse(drawCtx, startX, startY, rx, ry, svgColor, svgStrokeWidth);
 				}
 				
 				drawCanvas.onmouseup = function (e) {
@@ -710,219 +763,42 @@
 					var x2 = e.pageX - document.getElementById("allcanvas").offsetLeft, y2 = e.pageY - document.getElementById("allcanvas").offsetTop;
 					rx = Math.abs(x2-startX);
 					ry = Math.abs(y2-startY);
-					ellipseAgain(ctx, startX, startY, rx, ry, svgColor, svgStrokeWidth);
+					drawEllipse(ctx, startX, startY, rx, ry, svgColor, svgStrokeWidth);
 					
-					svgEllipse[ellipse][0]=	startX;	//(startX*oldsw)+oldsx;
-					svgEllipse[ellipse][1]=	startY;	//(startY*oldsh)+oldsy;
-					svgEllipse[ellipse][2]=	rx;	//rx*oldsw;
-					svgEllipse[ellipse][3]=	ry;	//ry*oldsh;
+					adjustRatio(canvas);
+					svgEllipse[ellipse][0]=	(startX * ratioWidth) + viewPort.sx;
+					svgEllipse[ellipse][1]=	(startY * ratioHeight) + viewPort.sy;	
+					svgEllipse[ellipse][2]=	rx * ratioWidth;	
+					svgEllipse[ellipse][3]=	ry * ratioHeight;	
 					svgEllipse[ellipse][4]= svgColor;
 					svgEllipse[ellipse][5]= svgStrokeWidth;
 					ellipse++;
 				}
 			}
 			
-			   <!-- var roof = null; -->
-				<!-- var roofPoints = []; -->
-				<!-- var lines = []; -->
-				<!-- var lineCounter = 0; -->
-				<!-- var drawingObject = {}; -->
-				<!-- drawingObject.type = ""; -->
-				<!-- drawingObject.background = ""; -->
-				<!-- drawingObject.border = ""; -->
-
-				<!-- function Point(x, y) { -->
-					<!-- this.x = x; -->
-					<!-- this.y = y; -->
-				<!-- } -->
-				
-				function Polygon(){
-					<!-- <svg width="400" height="400"><polygon points="100,10 300,210 170,250 123,234" style="stroke:pink;stroke-width:2;fill:none;"/> -->
-				<!-- <polygon points="120,100 300,310 170,350" style="stroke:purple;stroke-width:5;fill:none;"/> -->
-			<!-- </svg> -->
-					document.getElementById("svgDisp").value= '<polygon points="220,10 300,210 170,250 123,234" style="fill:lime;stroke:purple;stroke-width:1" />';
-				}
-				<!-- function Polygon(){ -->
-					<!-- if (drawingObject.type == "roof") { -->
-						<!-- drawingObject.type = ""; -->
-						<!-- lines.forEach(function(value, index, ar){ -->
-							 <!-- canvas.remove(value); -->
-						<!-- }); -->
-						<!-- //canvas.remove(lines[lineCounter - 1]); -->
-						<!-- roof = makeRoof(roofPoints); -->
-						<!-- canvas.add(roof); -->
-						<!-- canvas.renderAll(); -->
-					<!-- } else { -->
-						<!-- drawingObject.type = "roof"; // roof type -->
-					<!-- } -->
-				<!-- } -->
-				
-				<!-- myCanvas.onmousedown = function (e) { -->
-					<!-- paintline = true; -->
-					<!-- startX = e.pageX - document.getElementById("allcanvas").offsetLeft; //e=mouse cursor, this=canvas original x, -->
-					<!-- startY = e.pageY - document.getElementById("allcanvas").offsetTop; -->
-				<!-- } -->
-
-				<!-- // canvas Drawing -->
-			<!-- var canvas = new fabric.Canvas('myCanvas'); -->
-				<!-- var x = 0; -->
-				<!-- var y = 0; -->
-				
-				<!-- fabric.util.addListener(window,'dblclick', function(){  -->
-						<!-- drawingObject.type = ""; -->
-						<!-- lines.forEach(function(value, index, ar){ -->
-							 <!-- canvas.remove(value); -->
-						<!-- }); -->
-						<!-- //canvas.remove(lines[lineCounter - 1]); -->
-						<!-- roof = makeRoof(roofPoints); -->
-						<!-- canvas.add(roof); -->
-						<!-- canvas.renderAll(); -->
-				  
-					<!-- console.log("double click"); -->
-					<!-- //clear arrays -->
-					 <!-- roofPoints = []; -->
-					 <!-- lines = []; -->
-					 <!-- lineCounter = 0; -->
-					
-				<!-- }); -->
-
-				<!-- canvas.on('mouse:down', function (options) { -->
-					<!-- if (drawingObject.type == "roof") { -->
-						<!-- paintPolygon= true; -->
-						<!-- canvas.selection = false; -->
-						<!-- setStartingPoint(options); // set x,y -->
-						<!-- roofPoints.push(new Point(x, y)); -->
-						<!-- var points = [x, y, x, y]; -->
-						<!-- lines.push(new fabric.Line(points, { -->
-							<!-- strokeWidth: 3, -->
-							<!-- selectable: false, -->
-							<!-- stroke: 'orange' -->
-						<!-- }).setOriginX(x).setOriginY(y)); -->
-						<!-- canvas.add(lines[lineCounter]); -->
-						<!-- lineCounter++; -->
-						<!-- canvas.on('mouse:up', function (options) { -->
-							<!-- canvas.selection = true; -->
-							<!-- paintPolygon= false; -->
-						<!-- }); -->
-					<!-- } -->
-				<!-- }); -->
-				<!-- canvas.on('mouse:move', function (options) { -->
-					<!-- if (paintPolygon && lines[0] !== null && lines[0] !== undefined && drawingObject.type == "roof") { -->
-						<!-- setStartingPoint(options); -->
-						<!-- lines[lineCounter - 1].set({ -->
-							<!-- x2: x, -->
-							<!-- y2: y -->
-						<!-- }); -->
-						<!-- canvas.renderAll(); -->
-					<!-- } -->
-				<!-- }); -->
-
-				<!-- function setStartingPoint(options) { -->
-					<!-- x = options.e.pageX - document.getElementById("myCanvas").offsetLeft; -->
-					<!-- y = options.e.pageY - 120- document.getElementById("myCanvas").offsetTop; -->
-				<!-- } -->
-
-				<!-- function makeRoof(roofPoints) { -->
-
-					<!-- var left = findLeftPaddingForRoof(roofPoints); -->
-					<!-- var top = findTopPaddingForRoof(roofPoints); -->
-					<!-- roofPoints.push(new Point(roofPoints[0].x,roofPoints[0].y)) -->
-					<!-- var roof = new fabric.Polyline(roofPoints, { -->
-					<!-- fill: 'rgba(0,0,0,0)', -->
-					<!-- stroke:'red' -->
-					<!-- }); -->
-					<!-- roof.set({ -->
-						<!-- left: left, -->
-						<!-- top: top, -->
-					<!-- }); -->
-
-
-					<!-- return roof; -->
-				<!-- } -->
-
-				<!-- function findTopPaddingForRoof(roofPoints) { -->
-					<!-- var result = 999999; -->
-					<!-- for (var f = 0; f < lineCounter; f++) { -->
-						<!-- if (roofPoints[f].y < result) { -->
-							<!-- result = roofPoints[f].y; -->
-						<!-- } -->
-					<!-- } -->
-					<!-- return Math.abs(result); -->
-				<!-- } -->
-
-				<!-- function findLeftPaddingForRoof(roofPoints) { -->
-					<!-- var result = 999999; -->
-					<!-- for (var i = 0; i < lineCounter; i++) { -->
-						<!-- if (roofPoints[i].x < result) { -->
-							<!-- result = roofPoints[i].x; -->
-						<!-- } -->
-					<!-- } -->
-					<!-- return Math.abs(result); -->
-				<!-- } -->
-			
 			function redrawAnnotation(){
-				//setPixel();
-				adjustRatio(canvas);
-				var isx= viewPort.sx/fixedRatioW;
-				var isy= viewPort.sy/fixedRatioH;
-				var iratioWidth= (viewPort.iw-isx-isx)/ viewPort.iw;
-				var iratioHeight= (viewPort.ih-isy-isy)/ viewPort.ih;		
-				
+				adjustRatio(canvas);		
 				for (var i=0;i<text;i++){ 
-					textAgain((svgText[i][0]-isx)/ iratioWidth, (svgText[i][1]-isy)/ iratioHeight, svgText[i][2], svgText[i][3], svgText[i][4]); 
+					var fontType= svgText[i][4];
+					var font = parseInt(fontType.substr(0, 2))/(ratioWidth * (viewPort.iw/viewPort.vw));
+					fontType= font + fontType.substr(2);
+					drawText((svgText[i][0]-viewPort.sx)/ ratioWidth, (svgText[i][1]-viewPort.sy)/ ratioHeight, svgText[i][2], svgText[i][3], fontType); 
 				}
 				for (var i=0;i<line;i++){ 
-					lineAgain((svgLine[i][0]-isx)/ iratioWidth, (svgLine[i][1]-isy)/ iratioHeight, (svgLine[i][2]-isx)/ iratioWidth, (svgLine[i][3]-isy)/ iratioHeight, svgLine[i][4], svgLine[i][5]); 
+					drawLine(ctx, (svgLine[i][0]-viewPort.sx)/ ratioWidth, (svgLine[i][1]-viewPort.sy)/ ratioHeight, (svgLine[i][2]-viewPort.sx)/ ratioWidth, (svgLine[i][3]-viewPort.sy)/ ratioHeight, svgLine[i][4], svgLine[i][5]); 
 				}
 				for (var i=0;i<rect;i++){ 
-					rectAgain((svgRect[i][0]-isx)/ iratioWidth, (svgRect[i][1]-isy)/ iratioHeight, (svgRect[i][2]-isx)/ iratioWidth, (svgRect[i][3]-isy)/ iratioHeight, svgRect[i][4], svgRect[i][5]); 
+					drawRect(ctx, (svgRect[i][0]-viewPort.sx)/ ratioWidth, (svgRect[i][1]-viewPort.sy)/ ratioHeight, (svgRect[i][2]-viewPort.sx)/ ratioWidth, (svgRect[i][3]-viewPort.sy)/ ratioHeight, svgRect[i][4], svgRect[i][5]); 
 				}
 				for (var i=0;i<ellipse;i++){ 
-					ellipseAgain(ctx, (svgEllipse[i][0]-isx)/ iratioWidth, (svgEllipse[i][1]-isy)/ iratioHeight, svgEllipse[i][2]/ iratioWidth, svgEllipse[i][3]/ iratioHeight, svgEllipse[i][4], svgEllipse[i][5]); 
+					drawEllipse(ctx, (svgEllipse[i][0]-viewPort.sx)/ ratioWidth, (svgEllipse[i][1]-viewPort.sy)/ ratioHeight, svgEllipse[i][2]/ ratioWidth, svgEllipse[i][3]/ ratioHeight, svgEllipse[i][4], svgEllipse[i][5]); 
 				}
 				<!-- for (var i=0;i<polygon;i++){  -->
 					<!-- polygonAgain(i);  -->
 				<!-- } -->
 			}
 			
-			function textAgain(startX, startY, val, color, fontstyle){
-				ctx.beginPath();
-				ctx.font= fontstyle;
-				ctx.fillStyle= color;
-				ctx.fillText(val,startX,startY);
-			}
-		
-			function lineAgain(startX, startY, x2, y2, color, strokewidth){
-				ctx.beginPath();
-				ctx.strokeStyle= color;
-				ctx.lineWidth = strokewidth;
-				ctx.moveTo(startX, startY);
-				ctx.lineTo(x2, y2);
-				ctx.stroke();
-				
-				<!-- smallCtx.beginPath(); -->
-				<!-- smallCtx.strokeStyle= color; -->
-				<!-- smallCtx.lineWidth = strokewidth; -->
-				<!-- adjustRatio(canvas); -->
-				<!-- smallCtx.moveTo(startX*0.67, startY*0.67); -->
-				<!-- smallCtx.lineTo(x2*0.67, y2*0.67); -->
-				<!-- smallCtx.stroke(); -->
-				//ctx.fillStyle = "red";
-				//ctx.font = 3;
-				//ctx.fillText(len + 'mm', (x2 + startX) / 2, (y2 + startY) / 2);
-			}
-			
-			function rectAgain(startX, startY, x2, y2, color, strokewidth){
-				var width=x2-startX, height=y2-startY;
-				//document.getElementById("svgDisp").value+= startX + ", " + x2 + ", " +　startY + ", " + y2 + "\n";
-				ctx.beginPath();
-				ctx.strokeStyle= color;
-				ctx.lineWidth = strokewidth;
-				ctx.rect(startX, startY, width, height, color);
-				ctx.stroke();
-			}
-			
-			function ellipseAgain(ctxType, startX, startY, rx, ry, color, strokewidth){
+			function drawEllipse(ctxType, startX, startY, rx, ry, color, strokewidth){
 				ctxType.lineWidth=strokewidth;
 				ctxType.strokeStyle= color;
 				ctxType.beginPath();
@@ -932,42 +808,7 @@
 			<!-- END Annotation -->
 			
 			function showSVG(){
-				svgstr='<svg width="400" height="400">\n';
-				for(var i=0; i<line; i++){
-					svgstr+='<line x1="';
-					svgstr+=parseInt(svgLine[i][0]);
-					svgstr+='" y1="';
-					svgstr+=parseInt(svgLine[i][1]);
-					svgstr+='" x2="';
-					svgstr+=parseInt(svgLine[i][2]);
-					svgstr+='" y2="';
-					svgstr+=parseInt(svgLine[i][3]);
-					svgstr+='" style="stroke:' + svgLine[i][4] + ';stroke-width:' + svgLine[i][5] + ';fill:none" />\n';
-				}
-				for(var i=0; i<rect; i++){
-					var width=svgRect[i][2]-svgRect[i][0], height=svgRect[i][3]-svgRect[i][1];
-					svgstr+='<rect x="';
-					svgstr+=parseInt(svgRect[i][0]);
-					svgstr+='" y="';
-					svgstr+=parseInt(svgRect[i][1]);
-					svgstr+='" width="';
-					svgstr+=parseInt(width);
-					svgstr+='" height="';
-					svgstr+=parseInt(height);
-					svgstr+='" style="stroke:' + svgRect[i][4] + ';stroke-width:' + svgRect[i][5] + ';fill:none" />\n';
-				}
-				for(var i=0; i<ellipse; i++){
-					svgstr+='<ellipse cx="';
-					svgstr+=parseInt(svgEllipse[i][0]);
-					svgstr+='" cy="';
-					svgstr+=parseInt(svgEllipse[i][1]);
-					svgstr+='" rx="';
-					svgstr+=parseInt(svgEllipse[i][2]);
-					svgstr+='" ry="';
-					svgstr+=parseInt(svgEllipse[i][3]);
-					svgstr+='" style="stroke:' + svgEllipse[i][4] + ';stroke-width:' + svgEllipse[i][5] + ';fill:none" />\n';
-				}
-				
+				svgstr='<svg width="' + viewPort.vw + '" height="' + viewPort.vh + '">\n';
 				for(var i=0; i<text; i++){
 					svgstr+='<text x="';
 					svgstr+=parseInt(svgText[i][0]);
@@ -978,6 +819,43 @@
 					svgstr+=';font:18px Arial" >';
 					svgstr+=svgText[i][2];	
 					svgstr+='"</text>\n';
+				}
+				
+				for(var i=0; i<line; i++){
+					svgstr+='<line x1="';
+					svgstr+=parseInt(svgLine[i][0]);
+					svgstr+='" y1="';
+					svgstr+=parseInt(svgLine[i][1]);
+					svgstr+='" x2="';
+					svgstr+=parseInt(svgLine[i][2]);
+					svgstr+='" y2="';
+					svgstr+=parseInt(svgLine[i][3]);
+					svgstr+='" stroke="' + svgLine[i][4] + '" stroke-width="' + svgLine[i][5] + '" fill="none"/>\n';
+				}
+				
+				for(var i=0; i<rect; i++){
+					var width=svgRect[i][2]-svgRect[i][0], height=svgRect[i][3]-svgRect[i][1];
+					svgstr+='<rect x="';
+					svgstr+=parseInt(svgRect[i][0]);
+					svgstr+='" y="';
+					svgstr+=parseInt(svgRect[i][1]);
+					svgstr+='" width="';
+					svgstr+=parseInt(width);
+					svgstr+='" height="';
+					svgstr+=parseInt(height);
+					svgstr+='" stroke="' + svgRect[i][4] + '" stroke-width="' + svgRect[i][5] + '" fill="none"/>\n';
+				}
+				
+				for(var i=0; i<ellipse; i++){
+					svgstr+='<ellipse cx="';
+					svgstr+=parseInt(svgEllipse[i][0]);
+					svgstr+='" cy="';
+					svgstr+=parseInt(svgEllipse[i][1]);
+					svgstr+='" rx="';
+					svgstr+=parseInt(svgEllipse[i][2]);
+					svgstr+='" ry="';
+					svgstr+=parseInt(svgEllipse[i][3]);
+					svgstr+='" stroke="' + svgEllipse[i][4] + '" stroke-width="' + svgEllipse[i][5] + '" fill="none"/>\n';
 				}
 				
 				<!-- for(var i=0; i<polygon; i++){ -->
