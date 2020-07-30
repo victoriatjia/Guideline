@@ -113,8 +113,8 @@
 <DicomAttribute  Tag="00280103"  Offset ="2318" Length ="2"  VR= "US" Keyword= "PixelRepresentation" ><Value number="1" >0</Value></DicomAttribute>
 <DicomAttribute  Tag="00280106"  Offset ="2328" Length ="2"  VR= "US" Keyword= "SmallestImagePixelValue" ><Value number="1" >0</Value></DicomAttribute>
 <DicomAttribute  Tag="00280107"  Offset ="2338" Length ="2"  VR= "US" Keyword= "LargestImagePixelValue" ><Value number="1" >2157</Value></DicomAttribute>
-<DicomAttribute  Tag="00281050"  Offset ="2348" Length ="6"  VR= "DS" Keyword= "WindowCenter" ><Value number="1" >35\400</Value></DicomAttribute>
-<DicomAttribute  Tag="00281051"  Offset ="2362" Length ="8"  VR= "DS" Keyword= "WindowWidth" ><Value number="1" >350\1500</Value></DicomAttribute>
+<DicomAttribute  Tag="00281050"  Offset ="2348" Length ="6"  VR= "DS" Keyword= "WindowCenter" ><Value number="1" >400\35</Value></DicomAttribute>
+<DicomAttribute  Tag="00281051"  Offset ="2362" Length ="8"  VR= "DS" Keyword= "WindowWidth" ><Value number="1" >1500\350</Value></DicomAttribute>
 <DicomAttribute  Tag="00281052"  Offset ="2378" Length ="6"  VR= "DS" Keyword= "RescaleIntercept" ><Value number="1" >-1024 </Value></DicomAttribute>
 <DicomAttribute  Tag="00281053"  Offset ="2392" Length ="2"  VR= "DS" Keyword= "RescaleSlope" ><Value number="1" >1 </Value></DicomAttribute>
 <DicomAttribute  Tag="00281055"  Offset ="2402" Length ="16"  VR= "LO" Keyword= "WindowCenterWidthExplanation" ><Value number="1" >WINDOW1\WINDOW2 </Value></DicomAttribute>
