@@ -1,0 +1,161 @@
+<html>
+	<head>
+		<script src="getFHIR.js"></script>
+	</head>
+		
+	<body style="background-color: #202020;">
+		
+		<div id="windowLevelInfo" class="overlay" style="position:absolute;left:32%; top:3%;color: white; z-index:1"></div>	
+		<div id="allcanvas" style="margin: auto; position: relative;">
+			<canvas id="myCanvas"></canvas>
+		</div>		
+		
+		<script>
+			var canvas = document.getElementById("myCanvas"), ctx = canvas.getContext("2d");
+			var windowCenter, windowWidth, maxPixelValue, minPixelValue;
+			var line, rect, ellipse, polygon, text;
+			var svgLine, svgRect, svgEllipse, svgText;
+			var adjusting = false;
+			var dcmFile= "https://victoriatjia.github.io/Guideline/medicalImaging/DCMfiles/21004588.dcm";		// VAR TO STORE SOURCE DICOM FILE
+			var PanX=0, PanY=0;	
+			//Display image to canvas
+				var canvasWidth, canvasHeight;	
+				var sourceImage= {
+					width: 0,
+					height: 0
+				}
+				var scaleRatio=1;		//scaledImage.width/ sourceImage.width= 461.53/ 2560= 0.18
+				var fitCanvasRatio;	
+				var pixelDataOffset, modalityType, UID;
+				var storedBytes, samplesPerPixel; //data dicom, samplesPerPixel 1 =b&w
+			//end Display image to canvas
+			
+			getDCM();
+			function initialization(){
+				line=0, rect=0, ellipse=0, polygon=0, text=0;
+				svgLine = new Array(10), svgRect = new Array(10), svgEllipse = new Array(10), svgText = new Array(10);
+				for (var i = 0; i < 10; i++) {svgLine[i] = new Array(4);}
+				for (var i = 0; i < 10; i++) {svgRect[i] = new Array(6);}
+				for (var i = 0; i < 10; i++) {svgEllipse[i] = new Array(6);}
+				for (var i = 0; i < 10; i++) {svgText[i] = new Array(6);}
+				windowLevel();
+			}
+			
+			function getDCM(){
+				var xhttp = new XMLHttpRequest();
+				xhttp.open('GET', dcmFile, true);
+				xhttp.responseType = "arraybuffer";			//arraybuffer=binary file
+				xhttp.onreadystatechange = function () {
+					if (xhttp.readyState == 4) {
+						dicomData = new DataView(xhttp.response);
+						findMetaData(xhttp.response);					
+						canvasWidth= sourceImage.width, canvasHeight= sourceImage.height;	
+						document.getElementById("allcanvas").style.width= canvasWidth;	
+						document.getElementById("allcanvas").style.height= canvasHeight;  	
+						findMinMaxPixelValue();	
+						if(windowWidth == null || isNaN(windowWidth)){
+							windowWidth = (maxPixelValue - minPixelValue) + 1;
+							windowCenter = Math.floor(windowWidth / 2);	
+						}
+						PanX= Math.round((canvasWidth - sourceImage.width)/ 2);				
+						PanY= Math.round((canvasHeight - sourceImage.height)/ 2);
+						generateLUT();
+						setPixel();
+					}
+				}
+				xhttp.send();
+			}
+			
+			function setPixel() {
+				document.getElementById("windowLevelInfo").innerHTML= "WW/ WC: " + windowWidth + "/ " + windowCenter;
+				canvas.width = canvasWidth;
+				canvas.height = canvasHeight;
+				storedPixelValueToCanvas(ctx, sourceImage.width, sourceImage.height, PanX, PanY);	
+				getFHIR();
+			}
+			
+			function windowLevel(){
+				var nextCenter = windowCenter;
+				var nextWidth = windowWidth;
+
+				canvas.onmousedown = function (e) {
+					adjusting = true;
+					x1 = e.clientX;
+					y1 = e.clientY;
+				}
+				canvas.onmousemove = function (e) {
+					if (adjusting == true) {
+						var x = e.clientX;
+						var y = e.clientY;
+						nextCenter = parseInt(windowCenter) + x - x1;
+						nextWidth = parseInt(windowWidth) + y - y1;
+						document.getElementById("wcenter").value = nextCenter;
+						document.getElementById("wwidth").value = nextWidth;
+						setPixel();
+						redrawAnnotation();
+					}
+				}
+				canvas.onmouseup = function (e) {
+					if (adjusting == true) {
+						adjusting = false;
+						windowCenter = nextCenter;
+						windowWidth = nextWidth;
+						generateLUT();
+						setPixel();
+					}
+				}
+			}
+			
+			function redrawAnnotation(){
+				for (var i=0;i<text;i++){ 
+					var fontType= svgText[i][4];
+					var font = parseInt(fontType.substr(0, 2))*scaleRatio;
+					fontType= font + fontType.substr(2);
+					drawText((svgText[i][0]+(PanX/scaleRatio)) *scaleRatio, (svgText[i][1]+(PanY/scaleRatio)) *scaleRatio, svgText[i][2], svgText[i][3], fontType); 
+				}
+				for (var i=0;i<line;i++){ 
+					drawLine(ctx, (svgLine[i][0]+(PanX/scaleRatio)) *scaleRatio, (svgLine[i][1]+(PanY/scaleRatio)) *scaleRatio, (svgLine[i][2]+(PanX/scaleRatio)) *scaleRatio, (svgLine[i][3]+(PanY/scaleRatio)) *scaleRatio, svgLine[i][4], svgLine[i][5]); 
+				}
+				for (var i=0;i<rect;i++){ 
+					drawRect(ctx, (svgRect[i][0]+(PanX/scaleRatio)) *scaleRatio, (svgRect[i][1]+(PanY/scaleRatio)) *scaleRatio, (svgRect[i][2]+(PanX/scaleRatio)) *scaleRatio, (svgRect[i][3]+(PanY/scaleRatio)) *scaleRatio, svgRect[i][4], svgRect[i][5]); 
+				}
+				for (var i=0;i<ellipse;i++){ 
+					drawEllipse(ctx, (svgEllipse[i][0]+(PanX/scaleRatio)) *scaleRatio, (svgEllipse[i][1]+(PanY/scaleRatio)) *scaleRatio, svgEllipse[i][2]* scaleRatio, svgEllipse[i][3]* scaleRatio, svgEllipse[i][4], svgEllipse[i][5]); 
+				}
+			}
+			
+			function drawText(x1, y1, val, color, fontstyle){
+				ctx.beginPath();
+				ctx.font= fontstyle;
+				ctx.fillStyle= color;
+				ctx.fillText(val,x1,y1);
+			}
+			
+			function drawLine(ctxType, x1, y1, x2, y2, color, strokewidth){
+				ctxType.beginPath();
+				ctxType.strokeStyle= color;
+				ctxType.lineWidth = strokewidth;
+				ctxType.moveTo(x1, y1);
+				ctxType.lineTo(x2, y2);
+				ctxType.stroke();
+			}
+			
+			function drawRect(ctxType, x1, y1, x2, y2, color, strokewidth){
+				var width=x2-x1, height=y2-y1;
+				ctxType.beginPath();
+				ctxType.strokeStyle= color;
+				ctxType.lineWidth = strokewidth;
+				ctxType.rect(x1, y1, width, height);
+				ctxType.stroke();
+			}
+			
+			function drawEllipse(ctxType, x1, y1, rx, ry, color, strokewidth){
+				ctxType.lineWidth=strokewidth;
+				ctxType.strokeStyle= color;
+				ctxType.beginPath();
+				ctxType.ellipse(x1, y1, ry, rx, Math.PI / 2, 0, 2 * Math.PI); //x, y, major radiusX, minor radiusY, rotation, startAngle, endAngle
+				ctxType.stroke();
+			}
+		</script>
+	</body>
+</html>
