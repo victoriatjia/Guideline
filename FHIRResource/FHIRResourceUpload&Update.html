@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>FHIR Upload & Update</title>
+    <script src="HTTPRequest.js"></script>
+    <script>
+	var txt= 'A. Upload FHIR data\n1. Check "Post" radiobutton\n2. Insert total amount of data you want to upload\n3. Insert FHIR data you want to upload in the provided textarea\n4. Click Submit\n\n' + 
+				'B. Update FHIR data\n1. Check "Put" radiobutton\n2. Insert ID of FHIR data you want to update\n3. Insert FHIR data you want to update in the provided textarea\n4. Click Submit';
+	alert(txt);
+	
+	function postData() {
+		var dataString = document.getElementById("TextArea1").value;
+		var resourceID = document.getElementById("resource");
+		var selected = resourceID.options[resource.selectedIndex].text;
+		totalPost = document.getElementById("totalPost").value;
+		var apiURL;
+		apiURL =FHIRrootURL + '/'  + selected; 
+		//alert(apiURL);
+		if(document.getElementById("post").checked==true)
+			HTTPPostData(apiURL, dataString ); 
+		else if(document.getElementById("put").checked==true)
+			HTTPPutData(apiURL + "/" + document.getElementById("resourceID").value, dataString);
+	}
+
+	function showField(t){
+		if(t.id == "post"){
+			document.getElementById("fieldPost").style.visibility= "visible";
+			document.getElementById("fieldPut").style.visibility= "hidden";
+		}
+		else if(t.id == "put"){
+			document.getElementById("fieldPut").style.visibility= "visible";
+			document.getElementById("fieldPost").style.visibility= "hidden";
+		}
+	}
+	</script>	
+</head>
+
+<body style="height: 780px">
+	Resource :
+	<select id="resource">
+		<option>Patient</option>
+		<option>Appointment</option>
+		<option>Person</option>		
+		<option>Organization</option>	
+		<option>DiagnosticReport</option>
+		<option>Condition</option>			
+		<option>Observation</option>	
+		<option>Encounter</option>
+		<option>Practitioner</option>		
+		<option>PractitionerRole</option>	
+		<option>Location</option>	
+		<option>Schedule</option>	
+		<option>ServiceRequest</option>	
+		<option>Slot</option>
+		<option>ImagingStudy</option>		
+	</select><br>
+	<input type="radio" name="method" id="post" onchange="showField(this);" onselect="true" checked> Post 
+	<input type="radio" name="method" id="put" onchange="showField(this);"> Put<br>
+	<div id="fieldPost">Total: <input type="number" id="totalPost"></div>
+	<div id="fieldPut" style="visibility: hidden">ID: <input type="text" id="resourceID"></div><br>
+	
+	<input onclick="postData()"  type="button" value="submit" /><br>
+    <textarea id="TextArea1" name="S1" style="height:600px; width:700px"></textarea>
+</body>
+</html>
