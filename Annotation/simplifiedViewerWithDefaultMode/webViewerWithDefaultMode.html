@@ -1,0 +1,172 @@
+<html>
+	<head>
+		<script src="getFHIR.js"></script>
+	</head>
+		
+	<body style="background-color: #202020;">
+		<div style="color: white; visibility: hidden;">FHIR Observation ID: &nbsp;
+			<input type="text" size="10" id="fhirObsID" onchange="getFHIR()">
+		</div>
+		
+		<div id="windowLevelInfo" class="overlay" style="position:absolute;left:32%; top:9%;color: white; z-index:1"></div>	
+		<div id="allcanvas" style="margin: auto; position: relative;">
+			<canvas id="myCanvas"></canvas>
+		</div>		
+		
+		<script>
+			var mycanvas = document.getElementById("myCanvas"), ctx = mycanvas.getContext("2d");
+			var defaultSetting= {
+				windowCenter: 0,
+				windowWidth: 0,
+				maxPixelValue: 0,
+				minPixelValue: 0,
+				pixelDataOffset: 0,
+				modalityType: "",
+				UID: "",
+				storedBytes: 0,
+				samplesPerPixel:0 //1 =b&w
+			}
+			var line, rect, ellipse, polygon, text;
+			var svgLine, svgRect, svgEllipse, svgText;
+			var adjusting = false;
+			var PanX=0, PanY=0;	
+			//Display image to canvas
+				var canvas={
+					width: 900,
+					height: 600,
+					ratio: 1	//scaledImage.width/ sourceImage.width= 461.53/ 2560= 0.18
+				}				
+				document.getElementById("allcanvas").style.width= canvas.width;	
+				document.getElementById("allcanvas").style.height= canvas.height;  	
+				var sourceImage= {
+					width: 0,
+					height: 0,
+					dcmFile: ""
+				}
+				var fitCanvasRatio;	
+			//end Display image to canvas
+			
+			if(document.getElementById("fhirObsID").value==""){
+				document.getElementById("fhirObsID").value="1611480";
+				getFHIR();
+			}
+			function initialization(){
+				line=0, rect=0, ellipse=0, polygon=0, text=0;
+				svgLine = new Array(10), svgRect = new Array(10), svgEllipse = new Array(10), svgText = new Array(10);
+				for (var i = 0; i < 10; i++) {svgLine[i] = new Array(4);}
+				for (var i = 0; i < 10; i++) {svgRect[i] = new Array(6);}
+				for (var i = 0; i < 10; i++) {svgEllipse[i] = new Array(6);}
+				for (var i = 0; i < 10; i++) {svgText[i] = new Array(6);}
+				windowLevel();
+			}
+			
+			function getDCM(system){
+				var xhttp = new XMLHttpRequest();
+				xhttp.open('GET', sourceImage.dcmFile, true);
+				xhttp.responseType = "arraybuffer";			//arraybuffer=binary file
+				xhttp.onreadystatechange = function () {
+					if (xhttp.readyState == 4) {
+						dicomData = new DataView(xhttp.response);
+						findMinMaxPixelValue();	
+						PanX= Math.round((canvas.width - sourceImage.width)/ 2);				
+						PanY= Math.round((canvas.height - sourceImage.height)/ 2);
+						generateLUT();
+						setPixel();
+					}
+				}
+				xhttp.send();
+			}
+			
+			function setPixel() {
+				document.getElementById("windowLevelInfo").innerHTML= "WW/ WC: " + defaultSetting.windowWidth + "/ " + defaultSetting.windowCenter;
+				mycanvas.width = canvas.width;
+				mycanvas.height = canvas.height;
+				storedPixelValueToCanvas(ctx, sourceImage.width, sourceImage.height, PanX, PanY);	
+				redrawAnnotation();
+			}
+			
+			function windowLevel(){
+				var nextCenter = defaultSetting.windowCenter;
+				var nextWidth = defaultSetting.windowWidth;
+
+				canvas.onmousedown = function (e) {
+					adjusting = true;
+					x1 = e.clientX;
+					y1 = e.clientY;
+				}
+				canvas.onmousemove = function (e) {
+					if (adjusting == true) {
+						var x = e.clientX;
+						var y = e.clientY;
+						nextCenter = parseInt(defaultSetting.windowCenter) + x - x1;
+						nextWidth = parseInt(defaultSetting.windowWidth) + y - y1;
+						document.getElementById("wcenter").value = nextCenter;
+						document.getElementById("wwidth").value = nextWidth;
+						setPixel();
+						redrawAnnotation();
+					}
+				}
+				canvas.onmouseup = function (e) {
+					if (adjusting == true) {
+						adjusting = false;
+						defaultSetting.windowCenter = nextCenter;
+						defaultSetting.windowWidth = nextWidth;
+						generateLUT();
+						setPixel();
+					}
+				}
+			}
+			
+			function redrawAnnotation(){
+				for (var i=0;i<text;i++){ 
+					var fontType= svgText[i][4];
+					var font = parseInt(fontType.substr(0, 2))*canvas.ratio;
+					fontType= font + fontType.substr(2);
+					drawText((svgText[i][0]+(PanX/canvas.ratio)) *canvas.ratio, (svgText[i][1]+(PanY/canvas.ratio)) *canvas.ratio, svgText[i][2], svgText[i][3], fontType); 
+				}
+				for (var i=0;i<line;i++){ 
+					drawLine(ctx, (svgLine[i][0]+(PanX/canvas.ratio)) *canvas.ratio, (svgLine[i][1]+(PanY/canvas.ratio)) *canvas.ratio, (svgLine[i][2]+(PanX/canvas.ratio)) *canvas.ratio, (svgLine[i][3]+(PanY/canvas.ratio)) *canvas.ratio, svgLine[i][4], svgLine[i][5]); 
+				}
+				for (var i=0;i<rect;i++){ 
+					drawRect(ctx, (svgRect[i][0]+(PanX/canvas.ratio)) *canvas.ratio, (svgRect[i][1]+(PanY/canvas.ratio)) *canvas.ratio, (svgRect[i][2]+(PanX/canvas.ratio)) *canvas.ratio, (svgRect[i][3]+(PanY/canvas.ratio)) *canvas.ratio, svgRect[i][4], svgRect[i][5]); 
+				}
+				for (var i=0;i<ellipse;i++){ 
+					drawEllipse(ctx, (svgEllipse[i][0]+(PanX/canvas.ratio)) *canvas.ratio, (svgEllipse[i][1]+(PanY/canvas.ratio)) *canvas.ratio, svgEllipse[i][2]* canvas.ratio, svgEllipse[i][3]* canvas.ratio, svgEllipse[i][4], svgEllipse[i][5]); 
+				}
+			}
+			
+			function drawText(x1, y1, val, color, fontstyle){
+				ctx.beginPath();
+				ctx.font= fontstyle;
+				ctx.fillStyle= color;
+				ctx.fillText(val,x1,y1);
+			}
+			
+			function drawLine(ctxType, x1, y1, x2, y2, color, strokewidth){
+				ctxType.beginPath();
+				ctxType.strokeStyle= color;
+				ctxType.lineWidth = strokewidth;
+				ctxType.moveTo(x1, y1);
+				ctxType.lineTo(x2, y2);
+				ctxType.stroke();
+			}
+			
+			function drawRect(ctxType, x1, y1, x2, y2, color, strokewidth){
+				var width=x2-x1, height=y2-y1;
+				ctxType.beginPath();
+				ctxType.strokeStyle= color;
+				ctxType.lineWidth = strokewidth;
+				ctxType.rect(x1, y1, width, height);
+				ctxType.stroke();
+			}
+			
+			function drawEllipse(ctxType, x1, y1, rx, ry, color, strokewidth){
+				ctxType.lineWidth=strokewidth;
+				ctxType.strokeStyle= color;
+				ctxType.beginPath();
+				ctxType.ellipse(x1, y1, ry, rx, Math.PI / 2, 0, 2 * Math.PI); //x, y, major radiusX, minor radiusY, rotation, startAngle, endAngle
+				ctxType.stroke();
+			}
+		</script>
+	</body>
+</html>
