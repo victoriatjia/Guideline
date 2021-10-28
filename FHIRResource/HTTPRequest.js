@@ -1,5 +1,5 @@
 ﻿var ret, totalPost;
-var FHIRrootURL = "http://203.64.84.213:8080/fhir"; //"http://hapi.fhir.org/baseR4"; 
+var FHIRrootURL = "http://203.64.84.213:8080/fhir"; //"https://hapi.fhir.tw/fhir" //"http://203.64.84.213:8080/fhir"; //"http://hapi.fhir.org/baseR4"; 
 //Get FHIR data
 function HTTPGetData(urlStr) {
     var HttpObj = new XMLHttpRequest();   

@@ -2,7 +2,7 @@
 	function getFHIR(){
 		var val= document.getElementById("fhirObsID").value;	//1611480; //1498880;//document.getElementById("fhirObsID").value;
 		initialization();
-		var FHIRServer= "http://hapi.fhir.org/baseR4/Observation/";	//"http://203.64.84.213:8080/fhir/" //"https://hapi.fhir.tw/fhir/"
+		var FHIRServer= "http://203.64.84.213:8080/fhir/Observation/";//"http://hapi.fhir.org/baseR4/Observation/";	//"http://203.64.84.213:8080/fhir/" //"https://hapi.fhir.tw/fhir/"
 		FHIRServer+= val;
 		
 		var xhttp = new XMLHttpRequest();
