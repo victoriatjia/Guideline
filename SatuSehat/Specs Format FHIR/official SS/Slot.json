@@ -1,0 +1,19 @@
+{
+   "resourceType": "Slot",
+   "appointmentType": {
+      "coding": [
+         {
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0276",
+            "code": "ROUTINE",
+            "display": "Routine appointment"
+         }
+      ]
+   },
+   "schedule": {
+      "reference": "Schedule/683a85cf-27fe-416d-a830-3d21d031e58a"
+   },
+   "status": "free",
+   "start": "2022-10-05T08:00:00+07:00",
+   "end": "2022-10-05T08:15:00+07:00",
+   "comment": "Slot untuk appointment pelayanan pada jam 8.00 WIB s/d 8.15 WIB"
+}
