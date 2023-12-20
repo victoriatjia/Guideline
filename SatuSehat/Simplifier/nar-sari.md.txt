@@ -1,0 +1,1666 @@
+## <b>SARI (Severe Acute Respiratory Infections)</b>
+*Last Updated: 2023/11/22*
+
+## A. Pendahuluan
+Tahapan alur integrasi dan resource yang digunakan untuk integrasi pelaporan kasus SARI dapat dilihat pada gambar dibawah ini.
+<center>
+<img src="https://victoriatjia.github.io/Guideline/SatuSehat/Specs%20Format%20FHIR/covid_pelaporan_sari.png" alt="covid-skema-pelaporan-sari" title="Pelaporan Kasus SARI Workflow" width="100%" style="max-width: 850px;">
+
+*Gambar 3. Skema Proses Pelaporan Kasus SARI*
+</center>
+
+## B. Strategi Pengiriman Data ke SATUSEHAT
+SATUSEHAT menyediakan dua pilihan cara mengirimkan data use case SARI:
+
+### 1. Berbasis Resource
+Data dapat dikirimkan secara berurutan sesuai resource yang terlibat pada alur pelayanan terkait. Sebagai contoh: ketika mengirimkan data registrasi kasus saja yang berisikan resource Encounter dan Condition, maka implementor mengirimkan resource-resource tersebut ke SATUSEHAT secara berurutan sesuai dependensinya.
+
+### 2. Berbasis Bundle
+Data dapat dikirimkan seluruh resource yang terlibat pada alur pelayanan terkait dengan menggunakan satu langkah pengiriman data ke SATUSEHAT menggunakan profil FHIR bernama Bundle.
+
+Resource-resource yang terlibat di setiap tahapan alur pelayanan untuk use case SARI adalah sebagai berikut:
+
+<!--
+| No  | Resource                  | Entry Mandatory |
+| --- |:------------------------- | --------------- |
+| 1   | Encounter *           | __Required__    |
+| 2   | Condition             | __Required__    |
+| 3   | Observation           | __Required__    |
+| 4   | ServiceRequest        | __Required__    |
+| 5   | Specimen              | __Required__    |
+| 6   | QuestionnaireResponse | __Required__    |
+-->
+
+<style>
+.table-fhir-resources {
+    border-collapse: collapse;
+}
+.table-fhir-resources, th, td {
+   border: 1px solid black;
+}
+
+th, td {
+   padding: 5px;
+}
+}
+</style>
+
+<table id="table-fhir-resources">
+<tr>
+	<th>Category</th>
+	<th>No</th>
+	<th>Resource</th>
+	<th>Entry Mandatory</th>
+</tr>
+<tr>
+	<td rowspan="5">Base</td>
+	<td>1</td>
+	<td>Patient</td>
+	<td><b>Required</b></td>
+</tr>
+<tr>
+	<td>2</td>
+	<td>Practitioner</td>
+	<td><b>Required</b></td>
+</tr>
+
+<tr>
+	<td>3</td>
+	<td>Organization</td>
+	<td><b>Required</b></td>
+</tr>
+
+<tr>
+	<td>4</td>
+	<td>Location</td>
+	<td><b>Required</b></td>
+</tr>
+<tr>
+	<td>5</td>
+	<td>Encounter *</td>
+	<td><b>Required</b></td>
+</tr>
+<tr>
+	<td rowspan="8">Clinical</td>
+	<td>6</td>
+	<td>Condition</td>
+	<td><b>Required</b></td>
+</tr>
+<tr>
+	<td>7</td>
+	<td>Observation</td>
+	<td><b>Required</b></td>
+</tr>
+<tr>
+	<td>8</td>
+	<td>ServiceRequest</td>
+	<td><b>Required</b></td>
+</tr>
+<tr>
+	<td>9</td>
+	<td>Specimen</td>
+	<td><b>Required</b></td>
+</tr>
+<tr>
+	<td>10</td>
+	<td>QuestionnaireResponse</td>
+	<td><b>Required</b></td>
+</tr>
+</table>
+
+<br>_Notes:_<br>
+1. *) Profile Resource yang direkomendasikan tersedia pada proses pencatatan
+2. __Required__: Entry resource harus dilibatkan setiap kali mengirimkan bundle
+3. _Optional_: Entry resource dapat tidak dilibatkan setiap kali mengirimkan bundle
+
+## C. Langkah-Langkah Pengiriman Data ke SATUSEHAT
+### <div id="SearchPatientPractitionerOrganization"> [Pre-Use Case Requirement] Pencarian data pasien, nakes, fasyankes, dan lokasi fasyankes </div>
+
+<div style="margin-left: 30px;">
+Karena data pasien di dalam SATUSEHAT sudah terdaftar lebih dulu di *Master Patient Index* (MPI) Kementerian Kesehatan, sehingga registrasi data pasien baru tidak diperlukan. Dengan demikian maka entry data untuk resource Patient tidak perlu diikutsertakan dalam bundle data yang dikirim.
+
+Disamping itu, data Fasyankes yang melaporkan kasus kematian Ibu juga tidak perlu dikirimkan data alamat seperti provinsi, dan kabupaten/kota karena data sudah tersedia pada *Master Sarana Index* yang ada di SATUSEHAT, begitu juga dengan identitas data nakes yang mengisi data laporan kematian tersebut juga tidak perlu dikirimkan karena sudah tersedia di *Master Nakes Index* yang ada di SATUSEHAT. 
+
+Proses pencarian data pasien, nakes, dan fasyankes dapat dilakukan melalui FHIR API dengan metode GET dengan parameter dibawah ini:
+
+| No  | Data        | Resource      | Parameter Pencarian         |
+| --- |------------ | ------------- | --------------------------|
+| 1   | Pasien      | Patient       | NIK, Pasien SATUSEHAT Number    |
+| 2   | Nakes       | Practitioner  | NIK, Nakes SATUSEHAT Number     |
+| 3   | Fasyankes   | Organization  | Fasyankes SATUSEHAT Number      |
+| 4   | Lokasi   | Location  | SATUSEHAT Location ID      |
+
+> `CATATAN:`
+>  Untuk metode pencarian data pasien, nakes, dan fasyankes di SATUSEHAT secara detail dapat dilihat dalam dokumen <a href="https://docs.google.com/document/d/1wGsuxUJcmWsGhTdAthe0pmcnsqtggLlQdFUG5fU4_T4/edit#heading=h.4fzggw2guay3" target="_blank">Petunjuk Teknis SATUSEHAT (Juknis SATSET)</a>.
+</div>
+
+### <div id=""> Step 1. Asal Mula Kunjungan</div>
+
+<div style="margin-left: 30px;">
+
+<!--Part 1-1 Variable Kunjungan Rawat Jalan-->
+<h4 style="font-weight: bold;">Kunjungan Rawat Jalan</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-1-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-1-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-1-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-1-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-1-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Encounter-Create-KunjunganRawatJalan}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 1-1-->
+
+<!--Part 1-2 Variable Kunjungan IGD-->
+<h4 style="font-weight: bold;">Kunjungan IGD</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-1-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-1-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-1-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-1-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-1-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Encounter-Create-KunjunganIGD}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 1-2-->
+
+</div>
+
+### <div id=""> Step 2. Pendataan Rawat Inap</div>
+
+<div style="margin-left: 30px;">
+</div>
+
+### <div id=""> Step 2.1. Pendataan Kunjungan Rawat Inap</div>
+
+<div style="margin-left: 30px;">
+
+<!--Part 2-1 Variable Pendataan Kunjungan Rawat Inap-->
+<h4 style="font-weight: bold;">Pendataan Kunjungan Rawat Inap</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Encounter-Arrived--Create-PendataanKunjunganRawatInap}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-1-->
+
+</div>
+
+### <div id=""> Step 2.2. Diagnosa Awal Saat Masuk</div>
+
+<div style="margin-left: 30px;">
+
+<!--Part 2-2 Variable Diagnosa Awal Saat Masuk-->
+<h4 style="font-weight: bold;">Diagnosa Awal Saat Masuk</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Condition-Create-DiagnosaAwalSaatMasuk}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-2-->
+
+
+<!--Part 2-2-1 Variable Update Encounter In-Progress-->
+<h4 style="font-weight: bold;">Update Encounter In-Progress</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-2-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-2-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-2-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-2-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-2-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Encounter-In-progress--Update-DiagnosaAwalSaatMasuk}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-2-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-2-1-->
+
+</div>
+</div>
+
+### <div id=""> Step 3. Konfirmasi Gejala Demam dan Batuk</div>
+
+<div style="margin-left: 30px;">
+Proses konfirmasi gejala demam dan batuk dilakukan dengan metode wawancara/anamnesis yang dilakukan oleh petugas di fasilitas layanan kesehatan. Data dari proses konfirmasi gejala dapat dikirimkan resource Condition.
+
+
+<!--Part 3-1 Variable Riwayat demam dalam 10 hari terakhir-->
+<h4 style="font-weight: bold;">Riwayat demam dalam 10 hari terakhir</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-3-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-3-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-3-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-3-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-3-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Condition-Create-Riwayatdemamdalam10hariterakhir}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-3-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-3-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-3-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 3-1-->
+
+
+<!--Part 3-2 Variable Suhu tubuh 38 derajat Celcius-->
+<h4 style="font-weight: bold;">Suhu tubuh &ge; 38 derajat Celcius</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-3-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-3-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-3-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-3-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-3-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Observation-Create-SuhuLebih38Celcius}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-3-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-3-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-3-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 3-2-->
+
+
+
+<!--Part 3-3 Variable Riwayat batuk dalam 10 hari terakhir-->
+<h4 style="font-weight: bold;">Riwayat batuk dalam 10 hari terakhir</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-3-3" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-3-3" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-3-3" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-3-3" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-3-3">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Condition-Create-Riwayatbatukdalam10hariterakhir}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-3-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-3-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-3-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 3-3-->
+
+
+
+
+
+
+</div>
+
+### <div id=""> Step 4. Pemeriksaan Frekuensi Pernapasan</div>
+
+<div style="margin-left: 30px;">
+Selain melakukan konfirmasi gejala, tenaga kesehatan akan melakukan pemeriksaan fisik yang diperlukan untuk melakukan diagnosis. Data dari proses pemeriksaan dapat dikirimkan resource Observation.
+
+<!--Part 4-1 Variable Pemeriksaan frekuensi pernapasan-->
+<h4 style="font-weight: bold;">Pemeriksaan frekuensi pernapasan</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-4-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-4-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-4-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-4-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-4-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Observation-Create-Pemeriksaanfrekuensipernapasan}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-4-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-4-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-4-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 4-1-->
+
+
+</div>
+
+### <div id=""> Step 5. Wawancara Faktor Penularan</div>
+
+<div style="margin-left: 30px;">
+Selain melakukan anamnesis dan pemeriksaan fisik, wawancara faktor penularan adalah kegiatan yang penting dilakukan untuk memberikan informasi epidemiologis. Data dari proses pemeriksaan dapat dikirimkan resource QuestionnaireResponse.
+
+<!--Part 5-1 Variable Wawancara Faktor Penularan-->
+<h4 style="font-weight: bold;">Wawancara Faktor Penularan</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-5-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-5-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-5-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-5-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-5-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-QuestionnaireResponse-Create-WawancaraFaktorPenularan}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-5-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-5-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-5-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 5-1-->
+
+</div>
+
+### <div id=""> Step 6.Permintaan Pemeriksaan Swab Hidung & Tenggorokan</div>
+
+<div style="margin-left: 30px;">
+Data mengenai permintaan pemeriksaan swab nasal ataupun tenggorok dapat dikirimkan dengan resource ServiceRequest.
+
+<!--Part 6-1 Variable Permintaan Pemeriksaan Swab Tenggorokan-->
+<h4 style="font-weight: bold;">Permintaan Pemeriksaan Swab Tenggorokan</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-6-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-6-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-6-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-6-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-6-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-ServiceRequest-Create-PermintaanPemeriksaanSwabTenggorokan}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-6-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-6-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-6-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 6-1-->
+
+<!--Part 6-2 Variable Permintaan Pemeriksaan Swab Hidung-->
+<h4 style="font-weight: bold;">Permintaan Pemeriksaan Swab Hidung</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-6-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-6-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-6-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-6-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-6-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-ServiceRequest-Create-PermintaanPemeriksaanSwabHidung}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-6-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-6-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-6-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 6-2-->
+
+</div>
+
+### <div id=""> Step 7. Spesimen</div>
+
+<div style="margin-left: 30px;">
+Data mengenai spesimen pemeriksaan swab dapat dikirmkan dengan resource Specimen.
+
+<!--Part 7-1 Variable Spesimen Swab Hidung-->
+<h4 style="font-weight: bold;">Spesimen Swab Hidung</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-7-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-7-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-7-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-7-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-7-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Specimen-Throat--Create-Throat}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-7-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-7-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-7-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 7-1-->
+
+
+<!--Part 7-2 Variable Spesimen Swab Tenggorokan-->
+<h4 style="font-weight: bold;">Spesimen Swab Tenggorokan</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-7-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-7-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-7-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-7-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-7-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Specimen-Throat--Create-Throat}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-7-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-7-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-7-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 7-2-->
+
+</div>
+
+### <div id=""> Step 8. Rujukan Pemeriksaan PCR dan Persiapan Pasien Pulang</div>
+
+<div style="margin-left: 30px;">
+
+### <div id=""> Step 8.1. Hasil Pemeriksaan PCR</div>
+
+<div style="margin-left: 30px;">
+Data mengenai rujukan pemeriksaan sampel pemeriksaan, yang mencakup permintaan untuk pemeriksaan PCR untuk deteksi virus COVID-19, Influenza Am atau Influenza B dapat dikirimkan dengan resource ServiceRequest
+
+<!--Part 8-1-1 Variable Hasil Pemeriksaan COVID-19 PCR-->
+<h4 style="font-weight: bold;">Hasil Pemeriksaan COVID-19 PCR</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-8-1-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-8-1-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-8-1-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-8-1-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-8-1-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Observation-VirusSARS-COV-2--Create-HasilPemeriksaanPCR}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-8-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-8-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-8-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 8-1-1-->
+
+
+<!--Part 8-1-2 Variable Hasil Pemeriksaan Influenza A PCR-->
+<h4 style="font-weight: bold;">Hasil Pemeriksaan Influenza A PCR</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-8-1-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-8-1-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-8-1-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-8-1-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-8-1-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Observation-VirusInfluenzaA--Create-HasilPemeriksaanPCR}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-8-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-8-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-8-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 8-1-2-->
+
+
+<!--Part 8-1-3 Variable Hasil Pemeriksaan Influenza B PCR-->
+<h4 style="font-weight: bold;">Hasil Pemeriksaan Influenza B PCR</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-8-1-3" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-8-1-3" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-8-1-3" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-8-1-3" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-8-1-3">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Observation-VirusInfluenzaB--Create-HasilPemeriksaanPCR}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-8-1-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-8-1-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-8-1-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 8-1-3-->
+
+</div>
+
+### <div id=""> Step 8.2. Diagnosa Utama dan Sekunder saat meninggalkan RS</div>
+
+<div style="margin-left: 30px;">
+Data mengenai diagnosis utama dan sekunder pasien perlu dapat dikirim dengan menggunakan resource Condition. Diagnosis pasien saat pasien keluar hanya perlu dikirimkan untuk pasien SARI yang dirawat di rumah sakit.
+
+<!--Part 8-2-1 Variable Diagnosa Utama saat meninggalkan RS-->
+<h4 style="font-weight: bold;">Diagnosa Utama saat meninggalkan RS</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-8-2-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-8-2-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-8-2-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-8-2-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-8-2-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Condition-Primary--Create-DiagnosaSaatMeninggalkanRS}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-8-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-8-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-8-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 8-2-1-->
+
+
+<!--Part 8-2-2 Variable Diagnosa Sekunder saat meninggalkan RS-->
+<h4 style="font-weight: bold;">Diagnosa Sekunder saat meninggalkan RS</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-8-2-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-8-2-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-8-2-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-8-2-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-8-2-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Condition-Secondary--Create-DiagnosaSaatMeninggalkanRS}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-8-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-8-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-8-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 8-2-2-->
+
+<!--Part 8-2-3 Variable Update Encounter-->
+<h4 style="font-weight: bold;">Update Encounter</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-8-2-3" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-8-2-3" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-8-2-3" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-8-2-3" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-8-2-3">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Encounter-Update-DiagnosaSaatMeninggalkanRS}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-8-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-8-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-8-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 8-2-3-->
+
+
+</div>
+
+### <div id=""> Step 8.3. Pengisian Kuisioner Lainnya</div>
+
+<div style="margin-left: 30px;">
+
+<!--Part 8-3 Variable Pengisian Kuesioner Lainnya-->
+<h4 style="font-weight: bold;">Pengisian Kuesioner Lainnya</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-8-3" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-8-3" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-8-3" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-8-3" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-8-3">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-QuestionnaireResponse-Create-PengisianKuesionerLainnya}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-8-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-8-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-8-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 8-3-->
+
+</div>
+
+### <div id=""> Step 8.4. Kondisi Keluar</div>
+
+<div style="margin-left: 30px;">
+Data kondisi saat meninggalkan Fasilitas Pelayanan Kesehatan menunjukkan keadaan pasien saat meninggalkan Fasilitas Pelayanan Kesehatan.
+Kondisi saat meninggalkan Fasilitas Pelayanan Kesehatan dengan pilihan jawaban “Stabil”, “Tidak stabil”, dan “Perbaikan” akan dikirimkan menggunakan resource Condition.
+
+<!--Part 8-4 Variable Kondisi Keluar-->
+<h4 style="font-weight: bold;">Kondisi Keluar</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-8-4" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-8-4" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-8-4" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-8-4" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-8-4">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Condition-Stabil--Create-KondisiKeluar}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-8-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-8-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-8-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 8-4-->
+
+</div>
+
+### <div id=""> Step 8.5. Cara Keluar</div>
+
+<div style="margin-left: 30px;">
+Data rencana tindak lanjut/cara keluar dari Fasilitas Pelayanan Kesehatan menunjukkan rencana perawatan selanjutnya yang akan diterima oleh pasien setelah pulang.
+
+Pengiriman data instruksi tindak lanjut dikirimkan melalui resource ServiceRequest.
+
+<!--Part 8-5 Variable Cara Keluar-->
+<h4 style="font-weight: bold;">Cara Keluar</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-8-5" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-8-5" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-8-5" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-8-5" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-8-5">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-ServiceRequest-Create-CaraKeluar}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-8-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-8-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-8-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 8-5-->
+</div>
+
+### <div id=""> Step 8.6. Pasien Pulang</div>
+
+<div style="margin-left: 30px;">
+
+<!--Part 8-6 Variable Pasien Pulang-->
+<h4 style="font-weight: bold;">Pasien Pulang</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-8-6" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-8-6" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-8-6" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-8-6" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-8-6">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Encounter-Update-PasienPulang}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-8-6" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-8-6" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-8-6" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 8-6-->
+
+</div>
+</div>
+
+### <div id=""> Step 9. Hasil Pemeriksaan PCR</div>
+
+<div style="margin-left: 30px;">
+Data mengenai hasil pemeriksaan PCR dari spesimen pemeriksaan dapat dikirimkan dengan resource Observation.
+</div>
+
+### <div id=""> Step 9. Rujukan Spesimen ke Laboratorium National dan WGS</div>
+
+<div style="margin-left: 30px;">
+Selain dari hasil pemeriksaan PCR, 10% dari spesimen akan dikirimkan ke laboratorium lanjutan untuk dilakukan pemeriksaan kultur virus dan Whole Genome Sequencing (WGS). Data mengenai rujukan spesimen ini dapat dikirimkan dengan resource ServiceRequest.
+
+<!--Part 9-1 Variable Rujukan Spesimen ke Laboratorium National Prof. Oemyati-->
+<h4 style="font-weight: bold;">Rujukan Spesimen ke Laboratorium National Prof. Oemyati</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-9-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-9-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-9-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-9-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-9-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+<pre style="background: #F6F8F8;border: 1px solid #e8edee; color: black;">
+{
+    "resourceType": "ServiceRequest",
+    "identifier": [
+        {
+            "system": "http://sys-ids.kemkes.go.id/servicerequest/10000004",
+            "value": "00001"
+        }
+    ],
+    "status": "active",
+    "intent": "original-order",
+    "priority": "routine",
+    "code": {
+        "coding": [
+            {
+                "code": "312880001",
+                "display": "Taking throat swab (procedure) ",
+                "system": "http://snomed.info/sct"
+            }
+        ]
+    },
+    "subject": {
+        "reference": "Patient/100000030009",
+        "display": "Budi Santoso"
+    },
+    "encounter": {
+        "reference": "Encounter/45e436ea-d6c7-4059-8cbe-e00fb2c665d8"
+    },
+    "occurrenceDateTime": "2022-06-14T08:30:27+07:00",
+    "requester": {
+        "reference": "Practitioner/N10000001",
+        "display": "Dokter Bronsig"
+    },
+    "performer": [
+        {
+            "reference": "Organization/100001",
+			"display": "Laboratorium National Prof. Oemyati"
+        }
+    ],
+    "reasonCode": [
+        {
+			"coding": [
+				{
+				  "system": "#tba",
+				  "code": "#tba",
+				  "display": "#tba"
+				}
+			],
+            "text": "Kultur Virus Influenza dan WGS (Whole Genome Sequencing)"
+        }
+    ],
+    "reasonReference": [
+        {
+            "reference": "Observation/1a87a831-06e1-4cb1-8203-640b295af35c",
+			"display": "Hasil Pemeriksaan Lab Virus Influenza Positif"
+        }
+    ],
+    "specimen":     [
+        {
+            "reference": "Specimen/1a87a831-06e1-4cb1-8203-640b295af35c",
+			"display": "Spesimen Influenza"
+        }
+    ]
+}
+</pre>
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-9-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-9-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-9-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 9-1-->
+
+<!--Part 9-2 Variable Rujukan Spesimen ke Laboratorium WGS-->
+<h4 style="font-weight: bold;">Rujukan Spesimen ke Laboratorium WGS</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-9-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-9-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-9-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-9-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-9-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-ServiceRequest-Create-RujukanSpesimenkeLaboratoriumWGS}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-9-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-9-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-9-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 9-2-->
+
+</div>
+
+### <div id=""> Step 10.1. Pemeriksaan Patogen Lainnya</div>
+
+<div style="margin-left: 30px;">
+Data mengenai hasil pemeriksaan patogen lainnya yang dilakukan dapat dikirimkan dengan resource ServiceRequest.
+
+<!--Part 10-1 Variable Pemeriksaan Patogen Lainnya-->
+<h4 style="font-weight: bold;">Pemeriksaan Patogen Lainnya</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-10-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-10-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-10-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-10-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-10-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-ServiceRequest-Create-PemeriksaanPathogenesisLainnya}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-10-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-10-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-10-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 10-1-->
+
+</div>
+
+### <div id=""> Step 10.2. Hasil Sekuensing DNA</div>
+
+<div style="margin-left: 30px;">
+Data mengenai hasil pemeriksaan sekuensing DNA dapat dikirimkan dengan resource Observation.
+
+
+<!--Part 10-2 Variable Hasil Sekuensing DNA-->
+<h4 style="font-weight: bold;">Hasil Sekuensing DNA</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-10-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-10-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-10-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-10-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-10-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-SARI-Observation-Create-HasilSekuensingDNA}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-10-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-10-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-10-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 10-2-->
+
+
+</div>
