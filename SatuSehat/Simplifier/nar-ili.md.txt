@@ -1,12 +1,12 @@
 ## <b>ILI (Influenza-like Illness)</b>
-*Last Updated: 2023/11/22*
+*Last Updated: 2023/12/20*
 
 ## A. Pendahuluan
 Tahapan alur integrasi dan resource yang digunakan untuk integrasi pelaporan kasus ILI dapat dilihat pada gambar dibawah ini.
 <center>
 <img src="https://victoriatjia.github.io/Guideline/SatuSehat/Specs%20Format%20FHIR/covid_pelaporan_ili.png" alt="covid-skema-pelaporan-ili" title="Pelaporan Kasus ILI Workflow" width="100%" style="max-width: 850px;">
 
-*Gambar 2. Skema Proses Pelaporan Kasus ILI*
+*Gambar 2. Alur Integrasi Pelaporan ILI (Influenza-like Illness)*
 </center>
 
 ## B. Strategi Pengiriman Data ke SATUSEHAT
@@ -20,35 +20,20 @@ Data dapat dikirimkan seluruh resource yang terlibat pada alur pelayanan terkait
 
 Resource-resource yang terlibat di setiap tahapan alur pelayanan untuk use case ILI adalah sebagai berikut:
 
-<!--
-| No  | Resource                  | Entry Mandatory |
-| --- |:------------------------- | --------------- |
-| 1   | Encounter *           | __Required__    |
-| 2   | Condition             | __Required__    |
-| 3   | Observation           | __Required__    |
-| 4   | ServiceRequest        | __Required__    |
-| 5   | Specimen              | __Required__    |
-| 6   | Medication            | _Optional_      |
-| 7   | MedicationRequest     | _Optional_      |
-| 8   | MedicationDispense    | _Optional_     |
-| 9   | QuestionnaireResponse | __Required__    |
--->
-
 <style>
 .table-fhir-resources {
     border-collapse: collapse;
 }
-.table-fhir-resources, th, td {
+.table-fhir-resources, .table-fhir-resources th, .table-fhir-resources td {
    border: 1px solid black;
 }
 
-th, td {
+.table-fhir-resources th, .table-fhir-resources td {
    padding: 5px;
-}
 }
 </style>
 
-<table id="table-fhir-resources">
+<table class="table-fhir-resources">
 <tr>
 	<th>Category</th>
 	<th>No</th>
@@ -111,17 +96,12 @@ th, td {
 </tr>
 <tr>
 	<td>11</td>
-	<td>Medication</td>
+	<td>DiagnosticReport</td>
 	<td><i>Optional</i></td>
 </tr>
 <tr>
 	<td>12</td>
-	<td>MedicationRequest</td>
-	<td><i>Optional</i></td>
-</tr>
-<tr>
-	<td>13</td>
-	<td>MedicationDispense</td>
+	<td>Composition</td>
 	<td><i>Optional</i></td>
 </tr>
 </table>
@@ -132,33 +112,18 @@ th, td {
 3. _Optional_: Entry resource dapat tidak dilibatkan setiap kali mengirimkan bundle
 
 ## C. Langkah-Langkah Pengiriman Data ke SATUSEHAT
-### <div id="SearchPatientPractitionerOrganization"> [Pre-Use Case Requirement] Pencarian data pasien, nakes, fasyankes, dan lokasi fasyankes </div>
+### <div id="SearchPatientPractitionerOrganization"> [Pre-Use Case Requirement] Pencarian Data Pasien</div>
 
 <div style="margin-left: 30px;">
-Karena data pasien di dalam SATUSEHAT sudah terdaftar lebih dulu di *Master Patient Index* (MPI) Kementerian Kesehatan, sehingga registrasi data pasien baru tidak diperlukan. Dengan demikian maka entry data untuk resource Patient tidak perlu diikutsertakan dalam bundle data yang dikirim.
-
-Disamping itu, data Fasyankes yang melaporkan kasus kematian Ibu juga tidak perlu dikirimkan data alamat seperti provinsi, dan kabupaten/kota karena data sudah tersedia pada *Master Sarana Index* yang ada di SATUSEHAT, begitu juga dengan identitas data nakes yang mengisi data laporan kematian tersebut juga tidak perlu dikirimkan karena sudah tersedia di *Master Nakes Index* yang ada di SATUSEHAT. 
-
-Proses pencarian data pasien, nakes, dan fasyankes dapat dilakukan melalui FHIR API dengan metode GET dengan parameter dibawah ini:
-
-| No  | Data        | Resource      | Parameter Pencarian         |
-| --- |------------ | ------------- | --------------------------|
-| 1   | Pasien      | Patient       | NIK, Pasien SATUSEHAT Number    |
-| 2   | Nakes       | Practitioner  | NIK, Nakes SATUSEHAT Number     |
-| 3   | Fasyankes   | Organization  | Fasyankes SATUSEHAT Number      |
-| 4   | Lokasi   | Location  | SATUSEHAT Location ID      |
+<p>Apabila melakukan pengiriman data kesehatan melalui SATUSEHAT yang memiliki elemen data terkait pasien, maka diperlukan informasi {patient-ihs-number} dari pasien yang bersangkutan. {patient-ihs-number} seorang pasien didapatkan dari Master Patient Index (MPI) Kementerian Kesehatan. MPI menyimpan data-data demografi pasien berskala nasional, mulai dari nama, tanggal lahir, alamat, IDentitas resmi yang diterbitkan pemerintah, dan lain lain. Setelah mendapatkan {patient-ihs-number}, ID dapat disimpan secara di masing-masing sistem internal fasyankes maupun partner non-fasyankes. {patient-ihs-number} akan mempermudah pelaporan pelayanan kesehatan yang berhubungan dengan pasien, karena partner tidak diwajibkan menyertakan data diri setiap ada pengiriman data {patient-ihs-number} juga dapat digunakan untuk melihat data diri pasien secara menyeluruh.</p>
 
 > `CATATAN:`
->  Untuk metode pencarian data pasien, nakes, dan fasyankes di SATUSEHAT secara detail dapat dilihat dalam dokumen <a href="https://docs.google.com/document/d/1wGsuxUJcmWsGhTdAthe0pmcnsqtggLlQdFUG5fU4_T4/edit#heading=h.4fzggw2guay3" target="_blank">Petunjuk Teknis SATUSEHAT (Juknis SATSET)</a>.
-</div>
+>  Proses pencarian `{patient-ihs-number}` dari pasien dapat dilakukan melalui FHIR API dengan metode GET. Untuk metode pencarian data pasien di SATUSEHAT secara detail dapat dilihat dalam _resource_ [`Patient`](https://satusehat.kemkes.go.id/platform/docs/id/fhir/resources/patient/#patient) dan terkait panduan/playbook MPI dapat dilihat dalam dokumen  <a href="https://satusehat.kemkes.go.id/platform/docs/id/master-data/master-patient-index/preliminary/#prem-mpi" target="_blank">Master Patient Index</a>.
 
-
-### <div id=""> Step 1. Pendataan Kunjungan Rawat Jalan</div>
+### <div id="">Step 1. Pendaftaran Kunjungan Pasien</div>
 
 <div style="margin-left: 30px;">
-Apabila melakukan pengiriman data kesehatan melalui SATUSEHAT yang memiliki elemen data terkait pasien, maka diperlukan informasi {patient-ihs-number} dari pasien yang bersangkutan. {patient-ihs-number} seorang pasien didapatkan dari Master Patient Index (MPI) Kementerian Kesehatan. MPI menyimpan data-data demografi pasien berskala nasional, mulai dari nama, tanggal lahir, alamat, IDentitas resmi yang diterbitkan pemerintah, dan lain lain. Setelah mendapatkan {patient-ihs-number}, ID dapat disimpan secara di masing-masing sistem internal fasyankes maupun partner non-fasyankes. {patient-ihs-number} akan mempermudah pelaporan pelayanan kesehatan yang berhubungan dengan pasien, karena partner tidak diwajibkan menyertakan data diri setiap ada pengiriman data {patient-ihs-number} juga dapat digunakan untuk melihat data diri pasien secara menyeluruh.
-
-Proses pencarian {patient-ihs-number} dari pasien dapat dilakukan melalui FHIR API dengan metode GET. Untuk metode pencarian data pasien di SATUSEHAT secara detail dapat dilihat dalam dokumen <a href="https://docs.google.com/document/d/1wGsuxUJcmWsGhTdAthe0pmcnsqtggLlQdFUG5fU4_T4/edit#heading=h.4fzggw2guay3">Petunjuk Teknis SATUSEHAT (Juknis SATSET)</a>.
+Kunjungan pasien dapat didefinisikan sebagai interaksi pasien terhadap suatu layanan fasyankes. Sebagai contoh, dalam satu rangkaian rawat jalan, seluruh rangkaian dapat didefinisikan sebagai satu “Encounter”. Data-data kunjungan pasien yang direkam meliputi kapan pertemuan tersebut mulai dan selesai, siapa tenaga kesehatan yang melayani, siapa subjek dari pelayanannya, dan informasi pendukung lainnya.
 
 
 <!--Part 1-1 Variable Pendataan Kunjungan Rawat Jalan-->
@@ -289,14 +254,18 @@ Proses pencarian {patient-ihs-number} dari pasien dapat dilakukan melalui FHIR A
 
 </div>
 
-### <div id=""> Step 2. Konfirmasi Gejala Demam dan Batuk</div>
+### <div id="">Step 2. Pengiriman Data Medis terkait Kondisi Pasien</div>
 
 <div style="margin-left: 30px;">
-Proses konfirmasi gejala demam dan batuk dilakukan dengan metode wawancara/anamnesis yang dilakukan oleh petugas  di fasilitas layanan kesehatan. Data dari proses konfirmasi gejala dapat dikirimkan resource Condition.
+Data terkait kondisi pasien pada modul ILI mencakup informasi sebagai berikut:<br>
+1. Suhu (resource Observation)<br>
+2. Frekuensi napas (resource Observation)<br>
+3. Gejala + Tanda Mulai Sakit/Gejala (resource Condition)<br>
+4. Kondisi medis (resource Observation)<br>
+5. Faktor Penularan & Alasan Tidak Mau Diambil Spesimen (resource QuestionnaireResponse)<br>
 
-
-<!--Part 2-1 Variable Konfirmasi Gejala Demam-->
-<h4 style="font-weight: bold;">Konfirmasi Gejala Demam</h4>
+<!--Part 2-1-->
+<h4 style="font-weight: bold;">Suhu</h4>
 
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
@@ -323,55 +292,7 @@ Proses konfirmasi gejala demam dan batuk dilakukan dengan metode wawancara/anamn
 
 <div role="tabpanel" class="tab-pane" id="data-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
 <div>
-
-<pre style="background: #F6F8F8;border: 1px solid #e8edee; color: maroon;">
-
-{
-    "resourceType": "Observation",
-    "status": "final",
-    "category": [
-        {
-            "coding": [
-                {
-                    "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                    "code": "vital-signs",
-                    "display": "Vital Signs"
-                }
-            ]
-        }
-    ],
-    "code": {
-        "coding": [
-            {
-                "system": "http://loinc.org",
-                "code": "8310-5",
-                "display": "Body temperature"
-            }
-        ]
-    },
-    "subject": {
-        "reference": "Patient/<strong style="color:#00a7ff">&lcub;&lcub;PATIENT_IHS_NUMBER&rcub;&rcub;</strong>"
-    },
-    "performer": [
-        {
-            "reference": "Practitioner/<strong style="color:#00a7ff">&lcub;&lcub;DOCTOR_IHS_NUMBER&rcub;&rcub;</strong>"
-        }
-    ],
-    "encounter": {
-        "reference": "Encounter/<strong style="color:#00a7ff">&lcub;&lcub;ENCOUNTER_REFERENCE_ID&rcub;&rcub;</strong>",
-        "display": "<strong style="color:#00a7ff">&lcub;&lcub;ENCOUNTER_DISPLAY_TEXT&rcub;&rcub;</strong>"
-    },
-    "effectiveDateTime": "<strong style="color:#00a7ff">&lcub;&lcub;OBSERVATION_EFFECTIVE_DATETIME&rcub;&rcub;</strong>",
-    "valueQuantity": {
-        "value": <strong style="color:#00a7ff">&lcub;&lcub;OBSERVATION_BODY_TEMPERATURE&rcub;&rcub;</strong>,
-        "unit": "Celcius",
-        "system": "http://unitsofmeasure.org",
-        "code": "Cel"
-    }
-}
-</pre>
-
-
+{{json:covid/ILI/Observation-Create-BodyTemperature.json
 </div>
 </div>
 
@@ -399,9 +320,8 @@ Proses konfirmasi gejala demam dan batuk dilakukan dengan metode wawancara/anamn
 <br>
 <!--END Part 2-1-->
 
-
-<!--Part 2-2 Variable Konfirmasi Gejala Batuk-->
-<h4 style="font-weight: bold;">Konfirmasi Gejala Batuk</h4>
+<!--Part 2-2-->
+<h4 style="font-weight: bold;">Frekuensi Napas</h4>
 
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
@@ -422,7 +342,7 @@ Proses konfirmasi gejala demam dan batuk dilakukan dengan metode wawancara/anamn
 <div class="tab-content snippet">
 <div role="tabpanel" class="tab-pane active" id="example-2-2">
 <div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-Condition-Create-Cough}}
+{{json:covid-ILI-Observation-Create-RespiratoryRate}}
 </div>
 </div>
 
@@ -447,16 +367,159 @@ Proses konfirmasi gejala demam dan batuk dilakukan dengan metode wawancara/anamn
 <br>
 <!--END Part 2-2-->
 
+<!--Part 2-3-->
+<h4 style="font-weight: bold;">Gejala + Tanda Mulai Sakit/Gejala</h4>
+<h5>Gejala batuk</h5>
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-3" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-3" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-3" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-3" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-3">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-ILI-Condition-Create-Cough}}
+</div>
 </div>
 
-### <div id=""> Step 3. Pemeriksaan Frekuensi Pernapasan</div>
+<div role="tabpanel" class="tab-pane" id="data-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-3-->
+
+<!--Part 2-4-->
+<h4 style="font-weight: bold;">Kondisi Medis</h4>
+<h5>Merokok</h5>
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-4" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-4" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-4" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-4" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-4">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-ILI-Observation-Create-RiskFactor-Smoke}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-2-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-4-->
+
+<!--Part 2-5 Variable Wawancara Faktor Penularan-->
+<h4 style="font-weight: bold;">Faktor Penularan & Alasan Tidak Mau Diambil Spesimen</h4>
+Selain melakukan anamnesis dan pemeriksaan fisik, wawancara faktor penularan adalah kegiatan yang penting dilakukan untuk memberikan informasi epidemiologis. Data dari proses pemeriksaan dapat dikirimkan resource QuestionnaireResponse
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-5" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-5" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-5" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-5" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-5">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-ILI-QuestionnaireResponse-Create-WawancaraFaktorPenularan}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-2-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-5-->
+</div>
+<!--END Part 2-->
+
+<!--Part 3-->
+### <div id="labRequest">Step 3. Permintaan Pemeriksaan (Laboratorium Pemeriksa/Dituju)</div>
 
 <div style="margin-left: 30px;">
-Selain melakukan konfirmasi gejala, tenaga kesehatan akan melakukan  pemeriksaan fisik yang diperlukan untuk melakukan diagnosis. Data dari proses pemeriksaan dapat dikirimkan resource Observation
+Data mengenai permintaan pemeriksaan swab nasal ataupun tenggorokan dapat dikirimkan dengan resource ServiceRequest.
 
-<!--Part 3-1 Variable Pemeriksaan Frekuensi Pernapasan-->
-<h4 style="font-weight: bold;">Pemeriksaan Frekuensi Pernapasan</h4>
-
+<!--Part 3-1-->
+<h4 style="font-weight: bold;">A. Rujukan dari Faskes Sentinel ke Lab Terpilih</h4>
+<h5>Permintaan Pemeriksaan COVID-19 PCR</h5>
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
 <a href="#example-3-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
@@ -476,7 +539,7 @@ Selain melakukan konfirmasi gejala, tenaga kesehatan akan melakukan  pemeriksaan
 <div class="tab-content snippet">
 <div role="tabpanel" class="tab-pane active" id="example-3-1">
 <div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-Observation-Create-RespiratoryRate}}
+{{json:covid-ILI-ServiceRequest-Create-PermintaanPemeriksaanCOVID-19PCR}}
 </div>
 </div>
 
@@ -501,16 +564,62 @@ Selain melakukan konfirmasi gejala, tenaga kesehatan akan melakukan  pemeriksaan
 <br>
 <!--END Part 3-1-->
 
+<!--Part 3-2-->
+<h4 style="font-weight: bold;">B. Permintaan Pemeriksaan Laboratorium Dalam Faskes</h4>
+<h5>Permintaan Pemeriksaan COVID-19 PCR</h5>
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-3-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-3-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-3-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-3-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-3-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-ILI-ServiceRequest-Create-PermintaanPemeriksaanCOVID-19PCR-2}}
+</div>
 </div>
 
-### <div id=""> Step 4. Wawancara Faktor Penularan</div>
+<div role="tabpanel" class="tab-pane" id="data-3-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-3-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-3-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 3-2-->
+</div>
+<!--END Part 3-->
+
+
+<!--Part 4-->
+### <div id="specimen">Step 4. Spesimen</div>
 
 <div style="margin-left: 30px;">
-Selain melakukan anamnesis dan pemeriksaan fisik, wawancara faktor penularan adalah kegiatan yang penting dilakukan untuk memberikan informasi epidemiologis. Data dari proses pemeriksaan dapat dikirimkan resource QuestionnaireResponse
-
-<!--Part 4-1 Variable Wawancara Faktor Penularan-->
-<h4 style="font-weight: bold;">Wawancara Faktor Penularan</h4>
-
+<!--Part 4-1-->
+<h4 style="font-weight: bold;">Specimen Keadaan Baik</h4>
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
 <a href="#example-4-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
@@ -530,7 +639,7 @@ Selain melakukan anamnesis dan pemeriksaan fisik, wawancara faktor penularan ada
 <div class="tab-content snippet">
 <div role="tabpanel" class="tab-pane active" id="example-4-1">
 <div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-QuestionnaireResponse-Create-WawancaraFaktorPenularan}}
+{{json:covid-ILI-Specimen-Create-GoodCondition}}
 </div>
 </div>
 
@@ -555,16 +664,62 @@ Selain melakukan anamnesis dan pemeriksaan fisik, wawancara faktor penularan ada
 <br>
 <!--END Part 4-1-->
 
+<!--Part 4-2-->
+<h4 style="font-weight: bold;">Specimen Keadaan Tidak Baik</h4>
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-4-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-4-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-4-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-4-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-4-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-ILI-Specimen-Create-BadCondition}}
+</div>
 </div>
 
-### <div id=""> Step 5. Permintaan Pemeriksaan Swab Hidung & Tenggorokan</div>
+<div role="tabpanel" class="tab-pane" id="data-4-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-4-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-4-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 4-2-->
+</div>
+<!--END Part 4-->
+
+<!--Part 5-->
+
+### <div id="specimen">Step 5. Hasil Pemeriksaan Laboratorium</div>
 
 <div style="margin-left: 30px;">
-Data mengenai permintaan pemeriksaan swab nasal ataupun tenggorok dapat dikirimkan dengan resource ServiceRequest.
-
-<!--Part 5-1 Variable Permintaan Pemeriksaan Swab Hidung-->
-<h4 style="font-weight: bold;">Permintaan Pemeriksaan Swab Hidung</h4>
-
+<!--Part 5-1-->
+<h4 style="font-weight: bold;">A. COVID-19 PCR</h4>
+<h5>COVID-19 PCR - Positif</h5>
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
 <a href="#example-5-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
@@ -584,7 +739,7 @@ Data mengenai permintaan pemeriksaan swab nasal ataupun tenggorok dapat dikirimk
 <div class="tab-content snippet">
 <div role="tabpanel" class="tab-pane active" id="example-5-1">
 <div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-ServiceRequest-Create-Nasalswab}}
+{{json:covid-ILI-Observation-Create-HasilPemeriksaanLab-Covid19}}
 </div>
 </div>
 
@@ -609,63 +764,152 @@ Data mengenai permintaan pemeriksaan swab nasal ataupun tenggorok dapat dikirimk
 <br>
 <!--END Part 5-1-->
 
-<!--Part 5-2 Variable Permintaan Pemeriksaan Swab Tenggorokan-->
-<h4 style="font-weight: bold;">Permintaan Pemeriksaan Swab Tenggorokan</h4>
-
+<!--Part 5-2-1-->
+<h4 style="font-weight: bold;">B. Influenza A</h4>
+<h5>Influenza A - Positif</h5>
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
-<a href="#example-5-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+<a href="#example-5-2-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
 </li>
 <li role="presentation">
-<a href="#data-5-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+<a href="#data-5-2-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
 </li>
 <li role="presentation">
-<a href="#variabel-5-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+<a href="#variabel-5-2-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
 </li>
 <li role="presentation">
-<a href="#valueset-5-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+<a href="#valueset-5-2-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
 </li>
 </ul>
 
 <!-- Tab panes -->
 <div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-5-2">
+<div role="tabpanel" class="tab-pane active" id="example-5-2-1">
 <div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-ServiceRequest-Create-Throatswab}}
+{{json:covid-ILI-Observation-Create-HasilPemeriksaanLab-InfluenzaA-Positif}}
 </div>
 </div>
 
-<div role="tabpanel" class="tab-pane" id="data-5-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div role="tabpanel" class="tab-pane" id="data-5-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
 <div>
 #tba
 </div>
 </div>
 
-<div role="tabpanel" class="tab-pane" id="variabel-5-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div role="tabpanel" class="tab-pane" id="variabel-5-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
 <div>
 #tba
 </div>
 </div>
 
-<div role="tabpanel" class="tab-pane" id="valueset-5-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div role="tabpanel" class="tab-pane" id="valueset-5-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
 <div>
 [none]
 </div>
 </div>
 </div>
 <br>
-<!--END Part 5-2-->
+<!--END Part 5-2-1-->
+
+<!--Part 5-2-2-->
+<h5>Influenza A - Subtype</h5>
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-5-2-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-5-2-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-5-2-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-5-2-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-5-2-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">{{json:covid-ILI-Observation-Create-HasilPemeriksaanLab-InfluenzaA-Subtype}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-5-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-5-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-5-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 5-2-2-->
+
+<!--Part 5-2-3-->
+<h5>Influenza A - Invalid</h5>
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-5-2-3" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-5-2-3" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-5-2-3" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-5-2-3" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-5-2-3">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">{{json:covid-ILI-Observation-Create-HasilPemeriksaanLab-InfluenzaA-Invalid}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-5-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-5-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-5-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 5-2-3-->
 
 </div>
 
-### <div id=""> Step 6. Spesimen</div>
+### <div id=""> Step 6. Laporan Hasil Pemeriksaan Laboratorium (Waktu Verifikasi Hasil)</div>
 
 <div style="margin-left: 30px;">
-Data mengenai spesimen pemeriksaan swab dapat dikirmkan dengan resource Specimen.
 
-<!--Part 6-1 Variable Pengiriman Spesimen-->
-<h4 style="font-weight: bold;">Pengiriman Spesimen</h4>
-
+<!--Part 6-1-->
+<h4 style="font-weight: bold;">A. Covid 19</h4>
+<h5>Covid 19 - Positif</h5>
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
 <a href="#example-6-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
@@ -684,68 +928,7 @@ Data mengenai spesimen pemeriksaan swab dapat dikirmkan dengan resource Specimen
 <!-- Tab panes -->
 <div class="tab-content snippet">
 <div role="tabpanel" class="tab-pane active" id="example-6-1">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-<pre style="background: #F6F8F8;border: 1px solid #e8edee; color: black;">
-{
-    "extension":  [
-        {
-            "transportedTime": "2022-07-14T10:00:00+07:00"
-        }
-    ],
-    "id": "cb2adef7-3971-4239-9cc2-6ae9981fe57d",
-    "identifier":  [
-        {
-            "assigner": {
-                "reference": "Organization/10000004"
-            },
-            "system": "http://sys-ids.kemkes.go.id/specimen/10000004",
-            "value": "00001"
-        }
-    ],
-    "collection": {
-        "collectedDateTime": "2022-07-14T10:00:00+07:00",
-        "method": {
-            "coding":  [
-                {
-                    "code": "312880001",
-                    "display": "Taking throat swab",
-                    "system": "http://snomed.info/sct"
-                },
-                {
-                    "code": "312882009",
-                    "display": "Taking nasal swab",
-                    "system": "http://snomed.info/sct"
-                }
-            ]
-        }
-    },
-    "request":  [
-        {
-            "reference": "ServiceRequest/65b8a884-7a79-41e1-96ab-3fc30837ac66"
-        }
-    ],
-    "resourceType": "Specimen",
-    "status": "available",
-    "subject": {
-        "display": "Budi Santoso",
-        "reference": "Patient/100000030009"
-    },
-    "type": {
-        "coding":  [
-            {
-                "code": "258529004",
-                "display": "Throat swab",
-                "system": "http://snomed.info/sct"
-            },
-            {
-                "code": "445297001",
-                "display": "Swab of internal nose",
-                "system": "http://snomed.info/sct"
-            }
-        ]
-    }
-}
-</pre>
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">{{json:covid-ILI-DiagnosticReport-Create-Laporan-Covid19}}
 </div>
 </div>
 
@@ -770,10 +953,9 @@ Data mengenai spesimen pemeriksaan swab dapat dikirmkan dengan resource Specimen
 <br>
 <!--END Part 6-1-->
 
-
-<!--Part 6-2 Variable Penerimaan dan Pemrosesan Spesimen-->
-<h4 style="font-weight: bold;">Penerimaan dan Pemrosesan Spesimen</h4>
-
+<!--Part 6-2-->
+<h4 style="font-weight: bold;">B. Influenza A</h4>
+<h5>Influenza A - Positif</h5>
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
 <a href="#example-6-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
@@ -792,74 +974,7 @@ Data mengenai spesimen pemeriksaan swab dapat dikirmkan dengan resource Specimen
 <!-- Tab panes -->
 <div class="tab-content snippet">
 <div role="tabpanel" class="tab-pane active" id="example-6-2">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-<pre style="background: #F6F8F8;border: 1px solid #e8edee; color: black;">
-{
-    "extension": [
-        {
-            "transportedTime": "2022-07-14T10:00:00+07:00"
-        }
-    ],
-    "id": "cb2adef7-3971-4239-9cc2-6ae9981fe57d",
-    "identifier": [
-        {
-            "assigner": {
-                "reference": "Organization/10000004"
-            },
-            "system": "http://sys-ids.kemkes.go.id/specimen/10000004",
-            "value": "00001"
-        }
-    ],
-    "collection": {
-        "collectedDateTime": "2022-07-14T10:00:00+07:00",
-        "method": {
-            "coding": [
-                {
-                    "code": "312880001",
-                    "display": "Taking throat swab",
-                    "system": "http://snomed.info/sct"
-                },
-                {
-                    "code": "312882009",
-                    "display": "Taking nasal swab",
-                    "system": "http://snomed.info/sct"
-                }
-            ]
-        }
-    },
-    "request": [
-        {
-            "reference": "ServiceRequest/65b8a884-7a79-41e1-96ab-3fc30837ac66"
-        }
-    ],
-    "resourceType": "Specimen",
-    "status": "available",
-    "subject": {
-        "display": "Budi Santoso",
-        "reference": "Patient/100000030009"
-    },
-    "type": {
-        "coding": [
-            {
-                "code": "258529004",
-                "display": "Throat swab",
-                "system": "http://snomed.info/sct"
-            },
-            {
-                "code": "445297001",
-                "display": "Swab of internal nose",
-                "system": "http://snomed.info/sct"
-            }
-        ]
-    },
-    "receivedTime": "2022-07-16T12:00:00+07:00",
-    "processing": [
-        {
-            "timeDateTime": "2022-07-16T13:30:00+07:00"
-        }
-    ]
-}
-</pre>
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">{{json:covid-ILI-DiagnosticReport-Create-Laporan-InfluenzaA}}
 </div>
 </div>
 
@@ -884,595 +999,108 @@ Data mengenai spesimen pemeriksaan swab dapat dikirmkan dengan resource Specimen
 <br>
 <!--END Part 6-2-->
 
+<!--Part 6-3-->
+<h5>Influenza A Subtype</h5>
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-6-3" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-6-3" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-6-3" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-6-3" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
 
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-6-3">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">{{json:covid-ILI-DiagnosticReport-Create-Laporan-InfluenzaA-Subtype}}
+</div>
 </div>
 
-### <div id=""> Step 7. Rujukan Pemeriksaan PCR dan Persiapan Pasien Pulang</div>
+<div role="tabpanel" class="tab-pane" id="data-6-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-6-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-6-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 6-3-->
+</div>
+
+### <div id=""> Step 7. Update Data Kunjungan</div>
 
 <div style="margin-left: 30px;">
 
-### <div id=""> Step 7.1. Rujukan Pemeriksaan PCR ke Laboratorium Regional</div>
-
-<div style="margin-left: 30px;">
-Data mengenai rujukan pemeriksaan sampel pemeriksaan, yang mencakup permintaan untuk pemeriksaan PCR untuk deteksi virus COVID-19, Influenza Am atau Influenza B dapat dikirimkan dengan resource ServiceRequest
-
-<!--Part 7-1-1 Variable Permintaan Pemeriksaan COVID-19 PCR-->
-<h4 style="font-weight: bold;">Permintaan Pemeriksaan COVID-19 PCR</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-7-1-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-7-1-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-7-1-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-7-1-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-7-1-1">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-ServiceRequest-Create-PermintaanPemeriksaanCOVID-19PCR}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-7-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-7-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-7-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 7-1-1-->
-
-
-<!--Part 7-2-2 Variable Permintaan Pemeriksaan Influenza A PCR-->
-<h4 style="font-weight: bold;">Permintaan Pemeriksaan Influenza A PCR</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-7-2-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-7-2-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-7-2-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-7-2-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-7-2-2">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-ServiceRequest-Create-PermintaanPemeriksaanInfluenzaAPCR}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-7-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-7-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-7-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 7-2-2-->
-
-<!--Part 7-3-3 Variable Permintaan Pemeriksaan Influenza B PCR-->
-<h4 style="font-weight: bold;">Permintaan Pemeriksaan Influenza B PCR</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-7-3-3" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-7-3-3" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-7-3-3" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-7-3-3" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-7-3-3">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-ServiceRequest-Create-PermintaanPemeriksaanInfluenzaBPCR}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-7-3-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-7-3-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-7-3-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 7-3-3-->
-
-</div>
-
-### <div id=""> Step 7.2. Peresepan Obat</div>
-
-<div style="margin-left: 30px;">
-Pengiriman data peresepan obat akan menggunakan 2 resources yaitu Medication dan MedicationRequest. Resource Medication akan mencatatkan data umum terkait obat yang akan diresepkan. Sedangkan resource MedicationRequest akan digunakan untuk mengirimkan data terkait peresepan obat seperti jumlah yang diresepkan, instruksi minum obat dan lain-lain. Kedua data ini dikirimkan secara bersamaan sebagai 1 paket yaitu Medication dan MedicationRequest. Satu payload Medication dan MedicationRequest hanya dapat digunakan untuk peresepan 1 jenis obat saja. Apabila terdapat 2 jenis obat yang diresepkan, maka dikirimkan 2 paket Medication dan MedicationRequest. 
-
-<!--Part 7-2-1 Variable Peresepan Obat-->
-<h4 style="font-weight: bold;">Peresepan Obat</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-7-2-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-7-2-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-7-2-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-7-2-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-7-2-1">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-MedicationRequest-Create-PeresepanObat}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-7-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-7-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-7-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 7-2-1-->
-
-<!--Part 7-2-1-1 Variable Medication-->
-<h4 style="font-weight: bold;">Medication</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-7-2-1-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-7-2-1-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-7-2-1-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-7-2-1-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-7-2-1-1">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-Medication-Create-Medication}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-7-2-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-7-2-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-7-2-1-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 7-2-1-1-->
-
-<!--Part 7-2-2 Variable Pengeluaran Obat-->
-<h4 style="font-weight: bold;">Pengeluaran Obat</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-7-2-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-7-2-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-7-2-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-7-2-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-7-2-2">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-MedicationDispense-Create-PengeluaranObat}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-7-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-7-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-7-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 7-2-2-->
-
-
-</div>
-
-### <div id=""> Step 7.3. Kondisi Keluar</div>
-
-<div style="margin-left: 30px;">
-Data kondisi saat meninggalkan Fasilitas Pelayanan Kesehatan menunjukkan keadaan pasien saat meninggalkan Fasilitas Pelayanan Kesehatan. 
-
-Kondisi saat meninggalkan Fasilitas Pelayanan Kesehatan dengan pilihan jawaban “Stabil”, “Tidak stabil”, dan “Perbaikan” akan dikirimkan menggunakan resource Condition.
-
-<!--Part 7-3 Variable Kondisi Keluar-->
-<h4 style="font-weight: bold;">Kondisi Keluar</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-7-3" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-7-3" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-7-3" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-7-3" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-7-3">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-Condition-Create-KondisiKeluar}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-7-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-7-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-7-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 7-3-->
-</div>
-
-### <div id=""> Step 7.4. Cara Keluar</div>
-
-<div style="margin-left: 30px;">
-Data rencana tindak lanjut/cara keluar dari Fasilitas Pelayanan Kesehatan menunjukkan rencana perawatan selanjutnya yang akan diterima oleh pasien setelah pulang.
-
-Pengiriman data instruksi tindak lanjut dikirimkan melalui resource ServiceRequest. 
-
-<!--Part 7-4 Variable Cara Keluar-->
-<h4 style="font-weight: bold;">Cara Keluar</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-7-4" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-7-4" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-7-4" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-7-4" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-7-4">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-Condition-Create-CaraKeluar}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-7-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-7-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-7-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 7-4-->
-
-</div>
-
-### <div id=""> Step 7.5. Pasien Pulang</div>
-
-<div style="margin-left: 30px;">
-
-<!--Part 7-5 Variable Pasien Pulang-->
+<!--Part 7-1-->
 <h4 style="font-weight: bold;">Pasien Pulang</h4>
-
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
-<a href="#example-7-5" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+<a href="#example-7-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
 </li>
 <li role="presentation">
-<a href="#data-7-5" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+<a href="#data-7-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
 </li>
 <li role="presentation">
-<a href="#variabel-7-5" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+<a href="#variabel-7-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
 </li>
 <li role="presentation">
-<a href="#valueset-7-5" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+<a href="#valueset-7-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
 </li>
 </ul>
 
 <!-- Tab panes -->
 <div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-7-5">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-<pre style="background: #F6F8F8;border: 1px solid #e8edee; color: black;">
-{
-    "resourceType": "Encounter",
-    "id": "2823ed1d-3e3e-434e-9a5b-9c579d192787",
-    "identifier": [
-        {
-            "system": "http://sys-ids.kemkes.go.id/encounter/10000004",
-            "value": "P20240001"
-        }
-    ],
-    "status": "finished",
-    "class": {
-        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
-        "code": "AMB",
-        "display": "ambulatory"
-    },
-    "subject": {
-        "reference": "Patient/100000030009",
-        "display": "Budi Santoso"
-    },
-    "participant": [
-        {
-            "type": [
-                {
-                    "coding": [
-                        {
-                            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
-                            "code": "ATND",
-                            "display": "attender"
-                        }
-                    ]
-                }
-            ],
-            "individual": {
-                "reference": "Practitioner/N10000001",
-                "display": "Dokter Bronsig"
-            }
-        }
-    ],
-    "period": {
-        "start": "2022-07-14T10:00:00+07:00",
-        "end": "2022-07-14T11:00:00+07:00"
-    },
-    "location": [
-        {
-            "location": {
-                "reference": "Location/ef011065-38c9-46f8-9c35-d1fe68966a3e",
-                "display": "Ruang 1A, Poliklinik Rawat Jalan"
-            }
-        }
-    ],
-    "diagnosis": [
-        {
-            "condition": {
-                "reference": "Condition/f2bc12fe-0ab2-4e5c-a3cd-32c66150cbe9",
-                "display": "Tuberculosis of lung, confirmed by sputum microscopy with or without culture"
-            },
-            "use": {
-                "coding": [
-                    {
-                        "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-                        "code": "DD",
-                        "display": "Discharge diagnosis"
-                    }
-                ]
-            },
-            "rank": 1
-        },
-        {
-            "condition": {
-                "reference": "Condition/ba0dd351-c30a-4659-994e-0013797b545b",
-                "display": "Non-insulin-dependent diabetes mellitus without complications"
-            },
-            "use": {
-                "coding": [
-                    {
-                        "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-                        "code": "DD",
-                        "display": "Discharge diagnosis"
-                    }
-                ]
-            },
-            "rank": 2
-        }
-    ],
-    "statusHistory": [
-        {
-            "status": "arrived",
-            "period": {
-                "start": "2022-07-14T10:00:00+07:00",
-                "end": "2022-07-14T10:10:00+07:00"
-            }
-        },
-        {
-            "status": "in-progress",
-            "period": {
-                "start": "2022-07-14T10:10:00+07:00",
-                "end": "2022-07-14T10:40:00+07:00"
-            }
-        },
-        {
-            "status": "finished",
-            "period": {
-                "start": "2022-07-14T10:40:00+07:00",
-                "end": "2022-07-14T11:00:00+07:00"
-            }
-        }
-    ],
-    "serviceProvider": {
-        "reference": "Organization/10000004"
-    }
-}
-</pre>
+<div role="tabpanel" class="tab-pane active" id="example-7-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">{{json:covid/ILI/Encounter-Update-PasienPulang.json}}
 </div>
 </div>
 
-<div role="tabpanel" class="tab-pane" id="data-7-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div role="tabpanel" class="tab-pane" id="data-7-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
 <div>
 #tba
 </div>
 </div>
 
-<div role="tabpanel" class="tab-pane" id="variabel-7-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div role="tabpanel" class="tab-pane" id="variabel-7-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
 <div>
 #tba
 </div>
 </div>
 
-<div role="tabpanel" class="tab-pane" id="valueset-7-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div role="tabpanel" class="tab-pane" id="valueset-7-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
 <div>
 [none]
 </div>
 </div>
 </div>
 <br>
-<!--END Part 7-5-->
-</div>
+<!--END Part 7-1-->
 </div>
 
-### <div id=""> Step 8. Hasil Pemeriksaan PCR</div>
+
+### <div id="">Step 8. Kuesioner Kasus ILI</div>
 
 <div style="margin-left: 30px;">
-Data mengenai hasil pemeriksaan PCR dari spesimen pemeriksaan dapat dikirimkan dengan resource Observation
 
-<!--Part 8-1 Variable Hasil Pemeriksaan PCR-->
-<h4 style="font-weight: bold;">Hasil Pemeriksaan PCR</h4>
-
+<!--Part 8-1-->
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
 <a href="#example-8-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
@@ -1491,8 +1119,7 @@ Data mengenai hasil pemeriksaan PCR dari spesimen pemeriksaan dapat dikirimkan d
 <!-- Tab panes -->
 <div class="tab-content snippet">
 <div role="tabpanel" class="tab-pane active" id="example-8-1">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-Observation-Create-HasilPemeriksaanPCR}}
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">{{json:covid-ILI-Composition-Create-Kuesioner-Kasus-ILI}}
 </div>
 </div>
 
@@ -1516,321 +1143,5 @@ Data mengenai hasil pemeriksaan PCR dari spesimen pemeriksaan dapat dikirimkan d
 </div>
 <br>
 <!--END Part 8-1-->
-</div>
-
-### <div id=""> Step 9. Rujukan Spesimen ke Laboratorium National dan WGS</div>
-
-<div style="margin-left: 30px;">
-Selain dari hasil pemeriksaan PCR, 10% dari spesimen akan dikirimkan ke laboratorium lanjutan untuk dilakukan pemeriksaan kultur virus dan Whole Genome Sequencing (WGS).  Data mengenai rujukan spesimen ini dapat dikirimkan dengan resource ServiceRequest
-
-<!--Part 9-1 Variable Hasil Rujukan Spesimen ke Laboratorium National Prof. Oemyati-->
-<h4 style="font-weight: bold;">Hasil Rujukan Spesimen ke Laboratorium National Prof. Oemyati</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-9-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-9-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-9-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-9-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-9-1">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-<pre style="background: #F6F8F8;border: 1px solid #e8edee; color: black;">
-{
-    "resourceType": "ServiceRequest",
-    "identifier": [
-        {
-            "system": "http://sys-ids.kemkes.go.id/servicerequest/10000004",
-            "value": "00001"
-        }
-    ],
-    "status": "active",
-    "intent": "original-order",
-    "priority": "routine",
-    "code": {
-        "coding": [
-            {
-                "code": "443968007",
-                "display": "Sequencing of entire coding region of gene (procedure)",
-                "system": "http://snomed.info/sct"
-            }
-        ]
-    },
-    "subject": {
-        "reference": "Patient/100000030009",
-        "display": "Budi Santoso"
-    },
-    "encounter": {
-        "reference": "Encounter/66533eb2-723d-4e7c-b7aa-500cd67dd4c8"
-    },
-    "occurrenceDateTime": "2022-07-14T10:00:00+07:00",
-    "requester": {
-        "reference": "Practitioner/N10000001",
-        "display": "Dokter Bronsig"
-    },
-    "performer": [
-        {
-            "reference": "Patient/100000030009",
-            "display": "Budi Santoso"
-        }
-    ],
-    "reasonCode": [
-        {
-            "text": "Suspect ILI"
-        }
-    ],
-    "locationCode": [
-        {
-            "coding": [
-                {
-                    "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
-                    "code": "laboratory",
-                    "display": "Laboratory"
-                }
-            ]
-        }
-    ],
-    "locationReference": [// refer to lab
-        {
-            "reference": "Location/ef011065-38c9-46f8-9c35-d1fe68966a3e",
-            "display": "Ruang 1A, Poliklinik Rawat Jalan"
-        }
-    ]
-}
-</pre>
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-9-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-9-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-9-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 9-1-->
-
-<!--Part 9-2 Variable Rujukan Spesimen ke Laboratorium WGS-->
-<h4 style="font-weight: bold;">Rujukan Spesimen ke Laboratorium WGS</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-9-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-9-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-9-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-9-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-9-2">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-ServiceRequest-Create-RujukanSpesimenkeLaboratoriumWGS}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-9-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-9-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-9-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 9-2-->
-
-</div>
-
-### <div id=""> Step 10.1. Pemeriksaan Patogen Lainnya</div>
-
-<div style="margin-left: 30px;">
-Data mengenai hasil pemeriksaan patogen lainnya yang dilakukan dapat dikirimkan dengan resource ServiceRequest
-
-<!--Part 10-1 Variable Pemeriksaan Patogen Lainnya-->
-<h4 style="font-weight: bold;">Pemeriksaan Patogen Lainnya</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-10-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-10-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-10-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-10-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-10-1">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-ILI-ServiceRequest-Create-PemeriksaanPatogenLainnya}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-10-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-10-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-10-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 10-1-->
-</div>
-
-### <div id=""> Step 10.2. Hasil Sekuensing DNA</div>
-
-<div style="margin-left: 30px;">
-Data mengenai hasil pemeriksaan sekuensing DNA dapat dikirimkan dengan resource Observation.
-
-<!--Part 10-2 Variable Hasil Sekuensing DNA-->
-<h4 style="font-weight: bold;">Hasil Sekuensing DNA</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-10-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-10-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-10-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-10-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-10-2">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-<pre style="background: #F6F8F8;border: 1px solid #e8edee; color: black;">
-{
-    "resourceType": "Observation",
-    "status": "final",
-    "category": [
-        {
-            "coding": [
-                {
-                    "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-                    "code": "laboratory",
-                    "display": "Laboratory"
-                }
-            ]
-        }
-    ],
-    "code": {
-        "coding": [
-            {
-                "system": "http://loinc.org",
-                "code": "74786-5",
-                "display": "Influenza virus B Yamagata lineage RNA [Presence] in Specimen by NAA with probe detection"
-            }
-        ]
-    },
-    "subject": {
-        "reference": "Patient/100000030009"
-    },
-    "performer": [
-        {
-            "reference": "Practitioner/N10000001"
-        }
-    ],
-    "encounter": {
-        "reference": "Encounter/66533eb2-723d-4e7c-b7aa-500cd67dd4c8",
-        "display": "Pemeriksaan Budi Santoso di hari Selasa, 14 Juni 2022"
-    },
-    "effectiveDateTime": "2022-07-20",
-    "valueCodeableConcept": {
-        "coding": [
-            {
-                "system": "http://loinc.org",
-                "code": "LA11882-0",
-                "display": "Detected"
-            }
-        ]
-    }
-}
-</pre>
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-10-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-10-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-10-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 10-2-->
 
 </div>
