@@ -1,5 +1,5 @@
 # Implementasi Use Case Vaksinasi COVID-19
-*Last Updated: 2023/11/22*
+*Last Updated: 2023/12/20*
 
 Vaksinasi memiliki peran yang sangat penting dalam menangani pandemi COVID-19. Vaksinasi COVID-19 secara umum bertujuan untuk:
 1. Melindungi Kesehatan Individu: Vaksin COVID-19 efektif dalam melindungi individu dari penyakit yang parah, komplikasi serius, dan risiko kematian akibat COVID-19. Dengan menerima vaksin, individu dapat mengurangi risiko mereka terkena penyakit yang membutuhkan perawatan medis intensif dan mengalami dampak jangka panjang pada kesehatan mereka.
@@ -90,7 +90,7 @@ Proses pencarian {patient-ihs-number} dari pasien dapat dilakukan melalui FHIR A
 
 
 <!--Part 1-1 Variable Pendataan Kunjungan-->
-<h4 style="font-weight: bold;">Pendataan Kunjungan</h4>
+<h4 style="font-weight: bold;">1. Pendataan Kunjungan Rawat Jalan</h4>
 
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
@@ -215,10 +215,8 @@ Proses pencarian {patient-ihs-number} dari pasien dapat dilakukan melalui FHIR A
 <br>
 <!--END Part 1-1-->
 
-
-<!--Part 1-2 Variable Pendataan Kelompok Penerima-->
-<h4 style="font-weight: bold;">Pendataan Kelompok Penerima</h4>
-
+<!--Part 1-2-->
+<h4 style="font-weight: bold;">Pasien Pulang</h4>
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
 <a href="#example-1-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
@@ -237,12 +235,374 @@ Proses pencarian {patient-ihs-number} dari pasien dapat dilakukan melalui FHIR A
 <!-- Tab panes -->
 <div class="tab-content snippet">
 <div role="tabpanel" class="tab-pane active" id="example-1-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">{{json:covid/vaksin/Encounter-Update-PasienPulang.json}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 1-2-->
+</div>
+<!--END Part 1-->
+
+### <div id=""> Step 2. Vaksinasi COVID-19</div>
+
+<div style="margin-left: 30px;">
+Pencatatan vaksinasi COVID-19 dilakukan oleh petugas di fasilitas layanan kesehatan dan dikirimkan menggunakan resource Immunization.
+
+
+<!--Part 2-1-->
+<h4 style="font-weight: bold;">a. Imunisasi dilakukan oleh Nakes</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-1">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-vaksin-Immunization-Create-Imunisasi-Complete-ByNakes-1}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-1-->
+
+<!--Part 2-2-->
+<h4 style="font-weight: bold;">b. Imunisasi ditunda karena kondisi klinis (Tunda)</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-vaksin-Immunization-Create-Imunisasi-Tunda}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-2-->
+
+
+<!--Part 2-3-->
+<h4 style="font-weight: bold;">c. Imunisasi tidak jadi dilakukan (Tidak Vaksin)</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-3" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-3" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-3" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-3" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-3">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-vaksin-Immunization-Create-Imunisasi-TidakVaksin}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-3-->
+
+
+<!--Part 2-4-->
+<h4 style="font-weight: bold;">d. Imunisasi dilakukan oleh Nakes dilaporkan KIPI oleh Nakes</h4>
+<h5>Imunisasi</h5>
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-4" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-4" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-4" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-4" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-4">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-vaksin-Immunization-Create-Imunisasi-Complete-ByNakes-2}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-2-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-4" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-4-->
+
+
+<!--Part 2-5-->
+<h5>KIPI terpantau Nakes</h5>
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-5" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-5" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-5" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-5" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-5">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-vaksin-Observation-Create-KIPI-Malaise}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-2-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-5" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-5-->
+
+
+<!--Part 2-6-->
+<h5>KIPI terpantau Nakes</h5>
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-2-6" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-2-6" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-2-6" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-2-6" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-2-6">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-vaksin-Immunization-Create-Imunisasi-Complete-ByKader}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-2-6" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-2-6" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-2-6" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 2-6-->
+</div>
+<!--END Part 2-->
+
+<!--Part 3-->
+### <div id=""> Step 3. Kategori & Subkategori Penerima Vaksin COVID-19</div>
+
+<div style="margin-left: 30px;">
+<!--Part 3-1 Variable Pendataan Kelompok Penerima-->
+<h4 style="font-weight: bold;">Kategori Penerima Vaksin COVID-19</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-3-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-3-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-3-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-3-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-3-1">
 <div style="background: #F6F8F8;border: 1px solid #e8edee;">
 {{json:covid-vaksin-Observation-Create-KelompokPenerima}}
 </div>
 </div>
 
-<div role="tabpanel" class="tab-pane" id="data-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div role="tabpanel" class="tab-pane" id="data-3-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
 <div>
 
 <pre style="background: #F6F8F8;border: 1px solid #e8edee; color: maroon;">
@@ -299,178 +659,11 @@ Proses pencarian {patient-ihs-number} dari pasien dapat dilakukan melalui FHIR A
 </div>
 </div>
 
-<div role="tabpanel" class="tab-pane" id="variabel-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-
-#tba
-
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-1-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 1-2-->
-
-<!--Part 1-3 Variable Pendataan Kategori Penerima-->
-<h4 style="font-weight: bold;">Pendataan Kategori Penerima</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-1-3" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-1-3" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-1-3" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-1-3" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-1-3">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-vaksin-Observation-Create-KategoriPenerima}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-1-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-
-</div>
-
-#tba
-
-
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-1-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-
-#tba
-
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-1-3" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 1-3-->
-</div>
-
-### <div id=""> Step 2. Pencatatan Vaksinasi</div>
-
-<div style="margin-left: 30px;">
-Pencatatan vaksinasi COVID-19 dilakukan oleh petugas di fasilitas layanan kesehatan dan dikirimkan menggunakan resource Immunization.
-
-
-<!--Part 2-1 Variable Pencatatan Vaksinasi-->
-<h4 style="font-weight: bold;">Pencatatan Vaksinasi</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-2-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-2-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-2-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-2-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-2-1">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-vaksin-Immunization-Create-PencatatanVaksinasi}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-
-#tba
-
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="variabel-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-
-#tba
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="valueset-2-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-[none]
-</div>
-</div>
-</div>
-<br>
-<!--END Part 2-1-->
-
-
-
-
-</div>
-
-### <div id=""> Step 3. Pencatatan Diagnosis</div>
-
-<div style="margin-left: 30px;">
-Vaksinasi COVID-19 hanya bisa dilaksanakan jika individu sedang dalam keadaan sehat. Kondisi tersebut dikirimkan menggunakan resource Condition.
-
-<!--Part 3-1 Variable Pencatatan Diagnosis-->
-<h4 style="font-weight: bold;">Pencatatan Diagnosis</h4>
-
-<ul class="nav nav-tabs" role="tablist">
-<li role="presentation" class="active">
-<a href="#example-3-1" aria-controls="example" role="tab" data-toggle="tab">Example</a>
-</li>
-<li role="presentation">
-<a href="#data-3-1" aria-controls="data" role="tab" data-toggle="tab">Template</a>
-</li>
-<li role="presentation">
-<a href="#variabel-3-1" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
-</li>
-<li role="presentation">
-<a href="#valueset-3-1" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
-</li>
-</ul>
-
-<!-- Tab panes -->
-<div class="tab-content snippet">
-<div role="tabpanel" class="tab-pane active" id="example-3-1">
-<div style="background: #F6F8F8;border: 1px solid #e8edee;">
-{{json:covid-vaksin-Condition-Create-PencatatanDiagnosis}}
-</div>
-</div>
-
-<div role="tabpanel" class="tab-pane" id="data-3-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
-<div>
-#tba
-</div>
-</div>
-
 <div role="tabpanel" class="tab-pane" id="variabel-3-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
 <div>
+
 #tba
+
 </div>
 </div>
 
@@ -483,15 +676,66 @@ Vaksinasi COVID-19 hanya bisa dilaksanakan jika individu sedang dalam keadaan se
 <br>
 <!--END Part 3-1-->
 
+<!--Part 3-2 Variable Pendataan Kategori Penerima-->
+<h4 style="font-weight: bold;">Subkategori Penerima Vaksin COVID-19</h4>
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-3-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-3-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-3-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-3-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-3-2">
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-vaksin-Observation-Create-KategoriPenerima}}
+</div>
 </div>
 
-### <div id=""> Step 4. Pasien Pulang</div>
+<div role="tabpanel" class="tab-pane" id="data-3-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+</div>
+
+#tba
+
+
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-3-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+
+#tba
+
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-3-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 3-2-->
+</div>
+
+### <div id=""> Step 4. Update Kunjungan + Diagnosis</div>
 
 <div style="margin-left: 30px;">
-Setelah mendapatkan vaksinasi COVID-19, individu dapat pulang. Kondisi individu pada saat pulang direkam dengan menggunakan resource Encounter.
-
-<!--Part 4-1 Variable Pasien Pulang-->
-<h4 style="font-weight: bold;">Pasien Pulang</h4>
+<!--Part 4-1 Variable Pencatatan Diagnosis-->
+<h4 style="font-weight: bold;">Pencatatan Diagnosis</h4>
+Vaksinasi COVID-19 hanya bisa dilaksanakan jika individu sedang dalam keadaan sehat. Kondisi tersebut dikirimkan menggunakan resource Condition.
 
 <ul class="nav nav-tabs" role="tablist">
 <li role="presentation" class="active">
@@ -511,103 +755,9 @@ Setelah mendapatkan vaksinasi COVID-19, individu dapat pulang. Kondisi individu 
 <!-- Tab panes -->
 <div class="tab-content snippet">
 <div role="tabpanel" class="tab-pane active" id="example-4-1">
-<pre style="background: #F6F8F8;border: 1px solid #e8edee; color: maroon;">
-{
-    "resourceType": "Encounter",
-    "id": "2823ed1d-3e3e-434e-9a5b-9c579d192787",
-    "identifier": [
-        {
-            "system": "http://sys-ids.kemkes.go.id/encounter/10000004",
-            "value": "P20240001"
-        }
-    ],
-    "status": "finished",
-    "class": {
-        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
-        "code": "IMMUNIZ",
-        "display": "Immunization"
-    },
-    "subject": {
-        "reference": "Patient/100000030009",
-        "display": "Budi Santoso"
-    },
-    "participant": [
-        {
-            "type": [
-                {
-                    "coding": [
-                        {
-                            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
-                            "code": "ATND",
-                            "display": "attender"
-                        }
-                    ]
-                }
-            ],
-            "individual": {
-                "reference": "Practitioner/N10000001",
-                "display": "Dokter Bronsig"
-            }
-        }
-    ],
-    "period": {
-        "start": "2022-07-14T10:00:00+07:00",
-        "end": "2022-07-14T11:00:00+07:00"
-    },
-    "location": [
-        {
-            "location": {
-                "reference": "Location/ef011065-38c9-46f8-9c35-d1fe68966a3e",
-                "display": "Ruang 1A, Poliklinik Rawat Jalan"
-            }
-        }
-    ],
-    "diagnosis": [
-        {
-            "condition": {
-                "reference": "Condition/f2bc12fe-0ab2-4e5c-a3cd-32c66150cbe9",
-                "display": "Fit and well"
-            },
-            "use": {
-                "coding": [
-                    {
-                        "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role",
-                        "code": "DD",
-                        "display": "Discharge diagnosis"
-                    }
-                ]
-            },
-            "rank": 1
-        }
-    ],
-    "statusHistory": [
-        {
-            "status": "arrived",
-            "period": {
-                "start": "2022-07-14T10:00:00+07:00",
-                "end": "2022-07-14T10:10:00+07:00"
-            }
-        },
-        {
-            "status": "in-progress",
-            "period": {
-                "start": "2022-07-14T10:10:00+07:00",
-                "end": "2022-07-14T10:40:00+07:00"
-            }
-        },
-        {
-            "status": "finished",
-            "period": {
-                "start": "2022-07-14T10:40:00+07:00",
-                "end": "2022-07-14T11:00:00+07:00"
-            }
-        }
-    ],
-    "serviceProvider": {
-        "reference": "Organization/10000004"
-    }
-}
-</pre>
+<div style="background: #F6F8F8;border: 1px solid #e8edee;">
+{{json:covid-vaksin-Condition-Create-PencatatanDiagnosis}}
+</div>
 </div>
 
 <div role="tabpanel" class="tab-pane" id="data-4-1" style="border: 1px solid #e8edee; padding: 15px 10px;">
@@ -631,4 +781,50 @@ Setelah mendapatkan vaksinasi COVID-19, individu dapat pulang. Kondisi individu 
 <br>
 <!--END Part 4-1-->
 
+<!--Part 4-2 Variable Pasien Pulang-->
+<h4 style="font-weight: bold;">Update Status Kunjungan Pasien Pulang</h4>
+Setelah mendapatkan vaksinasi COVID-19, individu dapat pulang. Status kunjungan individu pada saat pulang direkam dengan menggunakan resource Encounter.
+
+<ul class="nav nav-tabs" role="tablist">
+<li role="presentation" class="active">
+<a href="#example-4-2" aria-controls="example" role="tab" data-toggle="tab">Example</a>
+</li>
+<li role="presentation">
+<a href="#data-4-2" aria-controls="data" role="tab" data-toggle="tab">Template</a>
+</li>
+<li role="presentation">
+<a href="#variabel-4-2" aria-controls="variabel" role="tab" data-toggle="tab">Placeholder Variable</a>
+</li>
+<li role="presentation">
+<a href="#valueset-4-2" aria-controls="variabel" role="tab" data-toggle="tab">ValueSet</a>
+</li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content snippet">
+<div role="tabpanel" class="tab-pane active" id="example-4-2">
+{{json:covid-vaksin-Encounter-Update-PasienPulang}}
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="data-4-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="variabel-4-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+#tba
+</div>
+</div>
+
+<div role="tabpanel" class="tab-pane" id="valueset-4-2" style="border: 1px solid #e8edee; padding: 15px 10px;">
+<div>
+[none]
+</div>
+</div>
+</div>
+<br>
+<!--END Part 4-2-->
 </div>
